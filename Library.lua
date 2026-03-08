@@ -3795,28 +3795,6 @@ do
             Parent = Label,
         })
 
-        local Switch = New("Frame", {
-            AnchorPoint = Vector2.new(1, 0),
-            BackgroundColor3 = "MainColor",
-            Position = UDim2.fromScale(1, 0),
-            Size = UDim2.fromOffset(32, 18),
-            Parent = Button,
-        })
-        New("UICorner", {
-            CornerRadius = UDim.new(1, 0),
-            Parent = Switch,
-        })
-        New("UIPadding", {
-            PaddingBottom = UDim.new(0, 2),
-            PaddingLeft = UDim.new(0, 2),
-            PaddingRight = UDim.new(0, 2),
-            PaddingTop = UDim.new(0, 2),
-            Parent = Switch,
-        })
-        local SwitchStroke = New("UIStroke", {
-            Color = "OutlineColor",
-            Parent = Switch,
-        })
 
         local Ball = New("Frame", {
             BackgroundColor3 = "FontColor",
@@ -3829,65 +3807,79 @@ do
             Parent = Ball,
         })
 
-                    local Ring = New("Frame", {
-            AnchorPoint = Vector2.new(1, 0.5),
-            BackgroundColor3 = "MainColor",
-            Position = UDim2.new(1, 0, 0.5, 0),
-            Size = UDim2.fromOffset(18, 18),
-            Parent = Button,
-        })
-        New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Ring })
-        local RingStroke = New("UIStroke", { Color = "OutlineColor", Parent = Ring })
+local Ring = New("Frame", {
+    AnchorPoint = Vector2.new(1, 0.5),
+    BackgroundColor3 = "MainColor",
+    Position = UDim2.new(1, 0, 0.5, 0),
+    Size = UDim2.fromOffset(18, 18),
+    Parent = Button,
+})
 
-        local Dot = New("Frame", {
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            BackgroundColor3 = "AccentColor",
-            BackgroundTransparency = 1,
-            Position = UDim2.fromScale(0.5, 0.5),
-            Size = UDim2.fromOffset(0, 0),
-            Parent = Ring,
-        })
-        New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Dot })
+New("UICorner", {
+    CornerRadius = UDim.new(1, 0),
+    Parent = Ring
+})
+
+local RingStroke = New("UIStroke", {
+    Color = "OutlineColor",
+    Parent = Ring
+})
+
+local Dot = New("Frame", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    BackgroundColor3 = "AccentColor",
+    BackgroundTransparency = 1,
+    Position = UDim2.fromScale(0.5, 0.5),
+    Size = UDim2.fromOffset(0, 0),
+    Parent = Ring,
+})
+
+New("UICorner", {
+    CornerRadius = UDim.new(1, 0),
+    Parent = Dot
+})
 
         function Toggle:UpdateColors()
             Toggle:Display()
         end
 
-        function Toggle:Display()
-            if Library.Unloaded then return end
+function Toggle:Display()
+    if Library.Unloaded then return end
 
-            if Toggle.Disabled then
-                Label.TextTransparency = 0.8
-                RingStroke.Transparency = 0.5
-                Ring.BackgroundTransparency = 0.5
-                return
-            end
+    if Toggle.Disabled then
+        Label.TextTransparency = 0.8
+        RingStroke.Transparency = 0.5
+        Ring.BackgroundTransparency = 0.5
+        return
+    end
 
-            Ring.BackgroundTransparency = 0
-            RingStroke.Transparency = 0
-            Ring.BackgroundColor3 = Library.Scheme.MainColor
-            Library.Registry[Ring].BackgroundColor3 = "MainColor"
-            RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
-            Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+    Ring.BackgroundTransparency = 0
+    RingStroke.Transparency = 0
 
-            TweenService:Create(Label, Library.TweenInfo, {
-                TextTransparency = Toggle.Value and 0 or 0.4,
-            }):Play()
+    Ring.BackgroundColor3 = Library.Scheme.MainColor
+    Library.Registry[Ring].BackgroundColor3 = "MainColor"
 
-            if Toggle.Value then
-                TweenService:Create(Dot,
-                    TweenInfo.new(0.2, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Size = UDim2.fromOffset(10, 10),
-                    BackgroundTransparency = 0,
-                }):Play()
-            else
-                TweenService:Create(Dot,
-                    TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                    Size = UDim2.fromOffset(0, 0),
-                    BackgroundTransparency = 1,
-                }):Play()
-            end
-        end
+    RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+    Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+
+    TweenService:Create(Label, Library.TweenInfo, {
+        TextTransparency = Toggle.Value and 0 or 0.4,
+    }):Play()
+
+    if Toggle.Value then
+        TweenService:Create(Dot,
+            TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+            Size = UDim2.fromOffset(10,10),
+            BackgroundTransparency = 0
+        }):Play()
+    else
+        TweenService:Create(Dot,
+            TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+            Size = UDim2.fromOffset(0,0),
+            BackgroundTransparency = 1
+        }):Play()
+    end
+end
 
         function Toggle:UpdateColors()
             Toggle:Display()
