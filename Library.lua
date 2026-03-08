@@ -3795,8 +3795,6 @@ do
         Parent = Label,
     })
 
-    -- ====== Circle-style toggle (Ring + Dot) ======
-   -- ====== Circle-style toggle (Ring + Dot) ======
 local Ring = New("Frame", {
     AnchorPoint = Vector2.new(1, 0.5),
     BackgroundColor3 = Library.Scheme.MainColor,
@@ -3804,7 +3802,7 @@ local Ring = New("Frame", {
     Size = UDim2.fromOffset(18, 18),
     Parent = Button,
 })
-Library.Registry[Ring] = {}
+Library.Registry[Ring] = {} -- make sure Registry entry exists
 
 New("UICorner", {
     CornerRadius = UDim.new(1, 0),
@@ -3825,10 +3823,7 @@ local Dot = New("Frame", {
     Size = UDim2.fromOffset(0, 0),
     Parent = Ring,
 })
-New("UICorner", {
-    CornerRadius = UDim.new(1, 0),
-    Parent = Dot,
-})
+New("UICorner", { CornerRadius = UDim.new(1, 0), Parent = Dot })
 
     function Toggle:UpdateColors()
         Toggle:Display()
