@@ -3441,153 +3441,143 @@ do
         Button.Base, Button.Stroke = CreateButton(Button)
         InitEvents(Button)
 
-        function Button:AddButton(...)
-            local Info = GetInfo(...)
+    function Button:AddButton(...)
+    local Info = GetInfo(...)
 
-            local SubButton = {
-                Text = Info.Text,
-                Func = Info.Func,
-                DoubleClick = Info.DoubleClick,
+    local SubButton = {
+        Text = Info.Text,
+        Func = Info.Func,
+        DoubleClick = Info.DoubleClick,
 
-                Tooltip = Info.Tooltip,
-                DisabledTooltip = Info.DisabledTooltip,
-                TooltipTable = nil,
+        Tooltip = Info.Tooltip,
+        DisabledTooltip = Info.DisabledTooltip,
+        TooltipTable = nil,
 
-                Risky = Info.Risky,
-                Disabled = Info.Disabled,
-                Visible = Info.Visible,
+        Risky = Info.Risky,
+        Disabled = Info.Disabled,
+        Visible = Info.Visible,
 
-                Tween = nil,
-                Type = "SubButton",
-            }
+        Tween = nil,
+        Type = "SubButton",
+    }
 
-            Button.SubButton = SubButton
-            SubButton.Base, SubButton.Stroke = CreateButton(SubButton)
-            InitEvents(SubButton)
+    Button.SubButton = SubButton
 
-            function SubButton:UpdateColors()
-                if Library.Unloaded then
-                    return
-                end
+    -- ===== Create the button with premium style =====
+    SubButton.Base, SubButton.Stroke = CreateButton(SubButton)
 
-                StopTween(SubButton.Tween)
+    -- Add rounded corners
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = SubButton.Base
 
-                SubButton.Base.BackgroundColor3 = SubButton.Disabled and Library.Scheme.BackgroundColor
-                    or Library.Scheme.MainColor
-                SubButton.Base.TextTransparency = SubButton.Disabled and 0.8 or 0.4
-                SubButton.Stroke.Transparency = SubButton.Disabled and 0.5 or 0
+    -- Add subtle shadow
+    local shadow = Instance.new("UIStroke")
+    shadow.Color = Color3.fromRGB(0,0,0)
+    shadow.Transparency = 0.7
+    shadow.Thickness = 1
+    shadow.Parent = SubButton.Base
 
-                Library.Registry[SubButton.Base].BackgroundColor3 = SubButton.Disabled and "BackgroundColor"
-                    or "MainColor"
-            end
+    -- Gradient overlay for hover effect
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Library.Scheme.MainColor),
+        ColorSequenceKeypoint.new(1, Library.Scheme.MainColor:Lerp(Color3.new(1,1,1), 0.1))
+    })
+    gradient.Rotation = 45
+    gradient.Parent = SubButton.Base
 
-            function SubButton:SetDisabled(Disabled: boolean)
-                SubButton.Disabled = Disabled
+    InitEvents(SubButton)
 
-                if SubButton.TooltipTable then
-                    SubButton.TooltipTable.Disabled = SubButton.Disabled
-                end
+    -- ===== Smooth color animations =====
+    function SubButton:UpdateColors()
+        if Library.Unloaded then return end
+        StopTween(SubButton.Tween)
 
-                SubButton.Base.Active = not SubButton.Disabled
-                SubButton:UpdateColors()
-            end
+        local targetColor = SubButton.Disabled and Library.Scheme.BackgroundColor or Library.Scheme.MainColor
+        local targetText = SubButton.Disabled and 0.8 or 0.4
+        local targetStroke = SubButton.Disabled and 0.5 or 0
 
-            function SubButton:SetVisible(Visible: boolean)
-                SubButton.Visible = Visible
+        -- Tween background
+        SubButton.Tween = game:GetService("TweenService"):Create(
+            SubButton.Base,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {BackgroundColor3 = targetColor}
+        )
+        SubButton.Tween:Play()
 
-                SubButton.Base.Visible = SubButton.Visible
-                Groupbox:Resize()
-            end
+        SubButton.Base.TextTransparency = targetText
+        SubButton.Stroke.Transparency = targetStroke
 
-            function SubButton:SetText(Text: string)
-                SubButton.Text = Text
-                SubButton.Base.Text = Text
-            end
-
-            if typeof(SubButton.Tooltip) == "string" or typeof(SubButton.DisabledTooltip) == "string" then
-                SubButton.TooltipTable =
-                    Library:AddTooltip(SubButton.Tooltip, SubButton.DisabledTooltip, SubButton.Base)
-                SubButton.TooltipTable.Disabled = SubButton.Disabled
-            end
-
-            if SubButton.Risky then
-                SubButton.Base.TextColor3 = Library.Scheme.RedColor
-                Library.Registry[SubButton.Base].TextColor3 = "RedColor"
-            end
-
-            SubButton:UpdateColors()
-
-            if Info.Idx then
-                Buttons[Info.Idx] = SubButton
-            else
-                table.insert(Buttons, SubButton)
-            end
-
-            return SubButton
-        end
-
-        function Button:UpdateColors()
-            if Library.Unloaded then
-                return
-            end
-
-            StopTween(Button.Tween)
-
-            Button.Base.BackgroundColor3 = Button.Disabled and Library.Scheme.BackgroundColor
-                or Library.Scheme.MainColor
-            Button.Base.TextTransparency = Button.Disabled and 0.8 or 0.4
-            Button.Stroke.Transparency = Button.Disabled and 0.5 or 0
-
-            Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor" or "MainColor"
-        end
-
-        function Button:SetDisabled(Disabled: boolean)
-            Button.Disabled = Disabled
-
-            if Button.TooltipTable then
-                Button.TooltipTable.Disabled = Button.Disabled
-            end
-
-            Button.Base.Active = not Button.Disabled
-            Button:UpdateColors()
-        end
-
-        function Button:SetVisible(Visible: boolean)
-            Button.Visible = Visible
-
-            Holder.Visible = Button.Visible
-            Groupbox:Resize()
-        end
-
-        function Button:SetText(Text: string)
-            Button.Text = Text
-            Button.Base.Text = Text
-        end
-
-        if typeof(Button.Tooltip) == "string" or typeof(Button.DisabledTooltip) == "string" then
-            Button.TooltipTable = Library:AddTooltip(Button.Tooltip, Button.DisabledTooltip, Button.Base)
-            Button.TooltipTable.Disabled = Button.Disabled
-        end
-
-        if Button.Risky then
-            Button.Base.TextColor3 = Library.Scheme.RedColor
-            Library.Registry[Button.Base].TextColor3 = "RedColor"
-        end
-
-        Button:UpdateColors()
-        Groupbox:Resize()
-
-        Button.Holder = Holder
-        table.insert(Groupbox.Elements, Button)
-
-        if Info.Idx then
-            Buttons[Info.Idx] = Button
+        if SubButton.Risky then
+            SubButton.Base.TextColor3 = Library.Scheme.RedColor
         else
-            table.insert(Buttons, Button)
+            SubButton.Base.TextColor3 = Color3.fromRGB(255,255,255)
         end
-
-        return Button
     end
+
+    function SubButton:SetDisabled(Disabled)
+        SubButton.Disabled = Disabled
+        if SubButton.TooltipTable then SubButton.TooltipTable.Disabled = Disabled end
+        SubButton.Base.Active = not Disabled
+        SubButton:UpdateColors()
+    end
+
+    function SubButton:SetVisible(Visible)
+        SubButton.Visible = Visible
+        SubButton.Base.Visible = Visible
+        Groupbox:Resize()
+    end
+
+    function SubButton:SetText(Text)
+        SubButton.Text = Text
+        SubButton.Base.Text = Text
+    end
+
+    -- Tooltip
+    if typeof(SubButton.Tooltip) == "string" or typeof(SubButton.DisabledTooltip) == "string" then
+        SubButton.TooltipTable = Library:AddTooltip(SubButton.Tooltip, SubButton.DisabledTooltip, SubButton.Base)
+        SubButton.TooltipTable.Disabled = SubButton.Disabled
+    end
+
+    -- SubButton hover effect
+    SubButton.Base.MouseEnter:Connect(function()
+        if not SubButton.Disabled then
+            local hoverTween = game:GetService("TweenService"):Create(
+                SubButton.Base,
+                TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+                {BackgroundColor3 = Library.Scheme.MainColor:Lerp(Color3.fromRGB(255,255,255),0.08)}
+            )
+            hoverTween:Play()
+        end
+    end)
+    SubButton.Base.MouseLeave:Connect(function()
+        SubButton:UpdateColors()
+    end)
+    SubButton.Base.MouseButton1Click:Connect(function()
+        if not SubButton.Disabled then
+            SubButton.Base.Position = SubButton.Base.Position + UDim2.fromOffset(1,1)
+            task.delay(0.05,function()
+                SubButton.Base.Position = SubButton.Base.Position - UDim2.fromOffset(1,1)
+            end)
+            Library:SafeCallback(SubButton.Func)
+        end
+    end)
+
+    SubButton:UpdateColors()
+    Groupbox:Resize()
+
+    SubButton.Holder = SubButton.Base
+    table.insert(Groupbox.Elements, SubButton)
+
+    if Info.Idx then
+        Buttons[Info.Idx] = SubButton
+    else
+        table.insert(Buttons, SubButton)
+    end
+
+    return SubButton
+end
 
     function Funcs:AddCheckbox(Idx, Info)
         Info = Library:Validate(Info, Templates.Toggle)
