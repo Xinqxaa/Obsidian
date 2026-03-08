@@ -6105,62 +6105,59 @@ function Library:CreateWindow(WindowInfo)
             Parent = BottomBackground,
         })
 
---// Footer
-New("TextLabel", {
-    BackgroundTransparency = 1,
-    Size = UDim2.fromScale(1, 1),
-    Text = WindowInfo.Footer,
-    TextSize = 14,
-    TextTransparency = 0.5,
-    Parent = BottomBar,
-})
+        --// Footer
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.fromScale(1, 1),
+            Text = WindowInfo.Footer,
+            TextSize = 14,
+            TextTransparency = 0.5,
+            Parent = BottomBar,
+        })
 
---// Resize Button
-if WindowInfo.Resizable then
-    ResizeButton = New("TextButton", {
-        AnchorPoint = Vector2.new(1, 0),
-        BackgroundTransparency = 1,
-        Position = UDim2.new(1, -WindowInfo.CornerRadius / 4, 0, 0),
-        Size = UDim2.fromScale(1, 1),
-        SizeConstraint = Enum.SizeConstraint.RelativeYY,
-        Text = "",
-        Parent = BottomBar,
-    })
+        --// Resize Button
+        if WindowInfo.Resizable then
+            ResizeButton = New("TextButton", {
+                AnchorPoint = Vector2.new(1, 0),
+                BackgroundTransparency = 1,
+                Position = UDim2.new(1, -WindowInfo.CornerRadius / 4, 0, 0),
+                Size = UDim2.fromScale(1, 1),
+                SizeConstraint = Enum.SizeConstraint.RelativeYY,
+                Text = "",
+                Parent = BottomBar,
+            })
 
-    Library:MakeResizable(MainFrame, ResizeButton, function()
-        for _, Tab in Library.Tabs do
-            Tab:Resize(true)
+            Library:MakeResizable(MainFrame, ResizeButton, function()
+                for _, Tab in Library.Tabs do
+                    Tab:Resize(true)
+                end
+            end)
         end
-    end)
-end
 
---// Resize Icon
-New("ImageLabel", {
-    Image = ResizeIcon and ResizeIcon.Url or "",
-    ImageColor3 = "FontColor",
-    ImageRectOffset = ResizeIcon and ResizeIcon.ImageRectOffset or Vector2.zero,
-    ImageRectSize = ResizeIcon and ResizeIcon.ImageRectSize or Vector2.zero,
-    ImageTransparency = 0.5,
-    Position = UDim2.fromOffset(2, 2),
-    Size = UDim2.new(1, -4, 1, -4),
-    Parent = ResizeButton,
-})
+        New("ImageLabel", {
+            Image = ResizeIcon and ResizeIcon.Url or "",
+            ImageColor3 = "FontColor",
+            ImageRectOffset = ResizeIcon and ResizeIcon.ImageRectOffset or Vector2.zero,
+            ImageRectSize = ResizeIcon and ResizeIcon.ImageRectSize or Vector2.zero,
+            ImageTransparency = 0.5,
+            Position = UDim2.fromOffset(2, 2),
+            Size = UDim2.new(1, -4, 1, -4),
+            Parent = ResizeButton,
+        })
 
---// Tabs \\--
-Tabs = New("ScrollingFrame", {
-    AutomaticCanvasSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = "BackgroundColor",
-    CanvasSize = UDim2.fromScale(0, 0),
-    Position = UDim2.fromOffset(0, 49),
-    ScrollBarThickness = 0,
-    Size = UDim2.new(0, InitialLeftWidth, 1, -70),
-    Parent = MainFrame,
-})
-
---// Tabs Layout
-New("UIListLayout", {
-    Parent = Tabs,
-})
+        --// Tabs \\--
+        Tabs = New("ScrollingFrame", {
+            AutomaticCanvasSize = Enum.AutomaticSize.Y,
+            BackgroundColor3 = "BackgroundColor",
+            CanvasSize = UDim2.fromScale(0, 0),
+            Position = UDim2.fromOffset(0, 49),
+            ScrollBarThickness = 0,
+            Size = UDim2.new(0, InitialLeftWidth, 1, -70),
+            Parent = MainFrame,
+        })
+        New("UIListLayout", {
+            Parent = Tabs,
+        })
         --// Container \\--
         Container = New("Frame", {
             AnchorPoint = Vector2.new(1, 0),
