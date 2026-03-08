@@ -6074,12 +6074,63 @@ function Library:CreateWindow(WindowInfo)
                 Parent = MainFrame,
             })
         )
-        Library:AddOutline(MainFrame)
+Library:AddOutline(MainFrame)
         Library:MakeLine(MainFrame, {
             Position = UDim2.fromOffset(0, 48),
             Size = UDim2.new(1, 0, 0, 1),
         })
 
+        -- Animated purple glow
+        local glowLayers = {
+            { offset = 32, transparency = 0.97 },
+            { offset = 22, transparency = 0.93 },
+            { offset = 14, transparency = 0.87 },
+            { offset = 7,  transparency = 0.78 },
+            { offset = 3,  transparency = 0.65 },
+        }
+
+        local glowFrames = {}
+
+        for _, g in ipairs(glowLayers) do
+            local glow = Instance.new("Frame")
+            glow.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+            glow.BorderSizePixel = 0
+            glow.AnchorPoint = Vector2.new(0.5, 0.5)
+            glow.Position = UDim2.fromScale(0.5, 0.5)
+            glow.Size = UDim2.new(1, g.offset, 1, g.offset)
+            glow.BackgroundTransparency = g.transparency
+            glow.ZIndex = MainFrame.ZIndex - 1
+            Instance.new("UICorner", glow).CornerRadius = UDim.new(0, WindowInfo.CornerRadius + 8)
+            glow.Parent = MainFrame.Parent
+
+            table.insert(glowFrames, {
+                frame = glow,
+                baseTransparency = g.transparency,
+            })
+
+            Library:GiveSignal(MainFrame:GetPropertyChangedSignal("Position"):Connect(function()
+                glow.Position = UDim2.fromScale(0.5, 0.5)
+            end))
+            Library:GiveSignal(MainFrame:GetPropertyChangedSignal("Size"):Connect(function()
+                glow.Size = UDim2.new(1, g.offset, 1, g.offset)
+            end))
+            Library:GiveSignal(MainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
+                glow.Visible = MainFrame.Visible
+            end))
+        end
+
+        -- Pulse animation
+        Library:GiveSignal(game:GetService("RunService").RenderStepped:Connect(function()
+            local pulse = math.sin(tick() * 1.8) * 0.04
+            for _, g in ipairs(glowFrames) do
+                g.frame.BackgroundTransparency = math.clamp(g.baseTransparency + pulse, 0, 1)
+                g.frame.BackgroundColor3 = Color3.fromHSV(
+                    0.77 + math.sin(tick() * 0.4) * 0.03,
+                    0.85,
+                    0.95
+                )
+            end
+        end))
         DividerLine = New("Frame", {
             BackgroundColor3 = "OutlineColor",
             Position = UDim2.fromOffset(InitialLeftWidth, 0),
