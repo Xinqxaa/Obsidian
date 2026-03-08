@@ -3393,153 +3393,140 @@ do
         Button.Base, Button.Stroke = CreateButton(Button)
         InitEvents(Button)
 
-        function Button:AddButton(...)
-            local Info = GetInfo(...)
+       function Button:AddButton(...)
+    local Info = GetInfo(...)
 
-            local SubButton = {
-                Text = Info.Text,
-                Func = Info.Func,
-                DoubleClick = Info.DoubleClick,
+    local SubButton = {
+        Text = Info.Text,
+        Func = Info.Func,
+        DoubleClick = Info.DoubleClick,
 
-                Tooltip = Info.Tooltip,
-                DisabledTooltip = Info.DisabledTooltip,
-                TooltipTable = nil,
+        Tooltip = Info.Tooltip,
+        DisabledTooltip = Info.DisabledTooltip,
+        TooltipTable = nil,
 
-                Risky = Info.Risky,
-                Disabled = Info.Disabled,
-                Visible = Info.Visible,
+        Risky = Info.Risky,
+        Disabled = Info.Disabled,
+        Visible = Info.Visible,
 
-                Tween = nil,
-                Type = "SubButton",
-            }
+        Tween = nil,
+        Type = "SubButton",
+    }
 
-            Button.SubButton = SubButton
-            SubButton.Base, SubButton.Stroke = CreateButton(SubButton)
-            InitEvents(SubButton)
+    Button.SubButton = SubButton
+    SubButton.Base, SubButton.Stroke = CreateButton(SubButton)
+    InitEvents(SubButton)
 
-            function SubButton:UpdateColors()
-                if Library.Unloaded then
-                    return
-                end
+    -- ===== Premium styling =====
+    function SubButton:UpdateColors()
+        if Library.Unloaded then return end
+        StopTween(SubButton.Tween)
 
-                StopTween(SubButton.Tween)
+        SubButton.Base.BackgroundColor3 = SubButton.Disabled and Library.Scheme.BackgroundColor
+            or Library.Scheme.MainColor
+        SubButton.Base.TextTransparency = SubButton.Disabled and 0.8 or 0.4
+        SubButton.Stroke.Transparency = SubButton.Disabled and 0.5 or 0
 
-                SubButton.Base.BackgroundColor3 = SubButton.Disabled and Library.Scheme.BackgroundColor
-                    or Library.Scheme.MainColor
-                SubButton.Base.TextTransparency = SubButton.Disabled and 0.8 or 0.4
-                SubButton.Stroke.Transparency = SubButton.Disabled and 0.5 or 0
+        New("UICorner", {CornerRadius = UDim.new(0, 8), Parent = SubButton.Base}) -- smooth rounded corners
 
-                Library.Registry[SubButton.Base].BackgroundColor3 = SubButton.Disabled and "BackgroundColor"
-                    or "MainColor"
-            end
-
-            function SubButton:SetDisabled(Disabled: boolean)
-                SubButton.Disabled = Disabled
-
-                if SubButton.TooltipTable then
-                    SubButton.TooltipTable.Disabled = SubButton.Disabled
-                end
-
-                SubButton.Base.Active = not SubButton.Disabled
-                SubButton:UpdateColors()
-            end
-
-            function SubButton:SetVisible(Visible: boolean)
-                SubButton.Visible = Visible
-
-                SubButton.Base.Visible = SubButton.Visible
-                Groupbox:Resize()
-            end
-
-            function SubButton:SetText(Text: string)
-                SubButton.Text = Text
-                SubButton.Base.Text = Text
-            end
-
-            if typeof(SubButton.Tooltip) == "string" or typeof(SubButton.DisabledTooltip) == "string" then
-                SubButton.TooltipTable =
-                    Library:AddTooltip(SubButton.Tooltip, SubButton.DisabledTooltip, SubButton.Base)
-                SubButton.TooltipTable.Disabled = SubButton.Disabled
-            end
-
-            if SubButton.Risky then
-                SubButton.Base.TextColor3 = Library.Scheme.RedColor
-                Library.Registry[SubButton.Base].TextColor3 = "RedColor"
-            end
-
-            SubButton:UpdateColors()
-
-            if Info.Idx then
-                Buttons[Info.Idx] = SubButton
-            else
-                table.insert(Buttons, SubButton)
-            end
-
-            return SubButton
-        end
-
-        function Button:UpdateColors()
-            if Library.Unloaded then
-                return
-            end
-
-            StopTween(Button.Tween)
-
-            Button.Base.BackgroundColor3 = Button.Disabled and Library.Scheme.BackgroundColor
-                or Library.Scheme.MainColor
-            Button.Base.TextTransparency = Button.Disabled and 0.8 or 0.4
-            Button.Stroke.Transparency = Button.Disabled and 0.5 or 0
-
-            Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor" or "MainColor"
-        end
-
-        function Button:SetDisabled(Disabled: boolean)
-            Button.Disabled = Disabled
-
-            if Button.TooltipTable then
-                Button.TooltipTable.Disabled = Button.Disabled
-            end
-
-            Button.Base.Active = not Button.Disabled
-            Button:UpdateColors()
-        end
-
-        function Button:SetVisible(Visible: boolean)
-            Button.Visible = Visible
-
-            Holder.Visible = Button.Visible
-            Groupbox:Resize()
-        end
-
-        function Button:SetText(Text: string)
-            Button.Text = Text
-            Button.Base.Text = Text
-        end
-
-        if typeof(Button.Tooltip) == "string" or typeof(Button.DisabledTooltip) == "string" then
-            Button.TooltipTable = Library:AddTooltip(Button.Tooltip, Button.DisabledTooltip, Button.Base)
-            Button.TooltipTable.Disabled = Button.Disabled
-        end
-
-        if Button.Risky then
-            Button.Base.TextColor3 = Library.Scheme.RedColor
-            Library.Registry[Button.Base].TextColor3 = "RedColor"
-        end
-
-        Button:UpdateColors()
-        Groupbox:Resize()
-
-        Button.Holder = Holder
-        table.insert(Groupbox.Elements, Button)
-
-        if Info.Idx then
-            Buttons[Info.Idx] = Button
-        else
-            table.insert(Buttons, Button)
-        end
-
-        return Button
+        Library.Registry[SubButton.Base].BackgroundColor3 = SubButton.Disabled and "BackgroundColor"
+            or "MainColor"
     end
+
+    function SubButton:SetDisabled(Disabled: boolean)
+        SubButton.Disabled = Disabled
+        if SubButton.TooltipTable then SubButton.TooltipTable.Disabled = SubButton.Disabled end
+        SubButton.Base.Active = not SubButton.Disabled
+        SubButton:UpdateColors()
+    end
+
+    function SubButton:SetVisible(Visible: boolean)
+        SubButton.Visible = Visible
+        SubButton.Base.Visible = SubButton.Visible
+        Groupbox:Resize()
+    end
+
+    function SubButton:SetText(Text: string)
+        SubButton.Text = Text
+        SubButton.Base.Text = Text
+    end
+
+    if typeof(SubButton.Tooltip) == "string" or typeof(SubButton.DisabledTooltip) == "string" then
+        SubButton.TooltipTable = Library:AddTooltip(SubButton.Tooltip, SubButton.DisabledTooltip, SubButton.Base)
+        SubButton.TooltipTable.Disabled = SubButton.Disabled
+    end
+
+    if SubButton.Risky then
+        SubButton.Base.TextColor3 = Library.Scheme.RedColor
+        Library.Registry[SubButton.Base].TextColor3 = "RedColor"
+    end
+
+    SubButton:UpdateColors()
+
+    if Info.Idx then
+        Buttons[Info.Idx] = SubButton
+    else
+        table.insert(Buttons, SubButton)
+    end
+
+    return SubButton
+end
+
+-- ===== Main Button Styling =====
+function Button:UpdateColors()
+    if Library.Unloaded then return end
+    StopTween(Button.Tween)
+
+    Button.Base.BackgroundColor3 = Button.Disabled and Library.Scheme.BackgroundColor
+        or Library.Scheme.MainColor
+    Button.Base.TextTransparency = Button.Disabled and 0.8 or 0.4
+    Button.Stroke.Transparency = Button.Disabled and 0.5 or 0
+
+    New("UICorner", {CornerRadius = UDim.new(0, 8), Parent = Button.Base}) -- smooth rounded corners
+    Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor" or "MainColor"
+end
+
+function Button:SetDisabled(Disabled: boolean)
+    Button.Disabled = Disabled
+    if Button.TooltipTable then Button.TooltipTable.Disabled = Button.Disabled end
+    Button.Base.Active = not Button.Disabled
+    Button:UpdateColors()
+end
+
+function Button:SetVisible(Visible: boolean)
+    Button.Visible = Visible
+    Holder.Visible = Button.Visible
+    Groupbox:Resize()
+end
+
+function Button:SetText(Text: string)
+    Button.Text = Text
+    Button.Base.Text = Text
+end
+
+if typeof(Button.Tooltip) == "string" or typeof(Button.DisabledTooltip) == "string" then
+    Button.TooltipTable = Library:AddTooltip(Button.Tooltip, Button.DisabledTooltip, Button.Base)
+    Button.TooltipTable.Disabled = Button.Disabled
+end
+
+if Button.Risky then
+    Button.Base.TextColor3 = Library.Scheme.RedColor
+    Library.Registry[Button.Base].TextColor3 = "RedColor"
+end
+
+Button:UpdateColors()
+Groupbox:Resize()
+
+Button.Holder = Holder
+table.insert(Groupbox.Elements, Button)
+
+if Info.Idx then
+    Buttons[Info.Idx] = Button
+else
+    table.insert(Buttons, Button)
+end
+
+return Button
 
     function Funcs:AddCheckbox(Idx, Info)
         Info = Library:Validate(Info, Templates.Toggle)
