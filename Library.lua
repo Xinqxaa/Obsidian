@@ -280,24 +280,28 @@ local Templates = {
     },
 
     --// Library \\--
-    Window = {
-        Title = "No Title",
-        Footer = "No Footer",
-        Position = UDim2.fromOffset(6, 6),
-        Size = UDim2.fromOffset(720, 600),
-        IconSize = UDim2.fromOffset(30, 30),
-        AutoShow = true,
-        Center = true,
-        Resizable = true,
-        SearchbarSize = UDim2.fromScale(1, 1),
-        GlobalSearch = false,
-        CornerRadius = 4,
-        NotifySide = "Right",
-        ShowCustomCursor = true,
-        Font = Enum.Font.Code,
-        ToggleKeybind = Enum.KeyCode.RightControl,
-        MobileButtonsSide = "Left",
-        UnlockMouseWhileOpen = true,
+ Window = {
+    Title = "No Title",
+    Footer = "No Footer",
+    Position = UDim2.fromOffset(6, 6),
+    Size = UDim2.fromOffset(720, 600),
+    IconSize = UDim2.fromOffset(30, 30),
+    AutoShow = true,
+    Center = true,
+    Resizable = true,
+    SearchbarSize = UDim2.fromScale(1, 1),
+    GlobalSearch = false,
+    CornerRadius = 4,
+    NotifySide = "Right",
+    ShowCustomCursor = true,
+    Font = Enum.Font.Code,
+    ToggleKeybind = Enum.KeyCode.RightControl,
+    MobileButtonsSide = "Left",
+    UnlockMouseWhileOpen = true,
+    
+    FooterAnchorPoint = Vector2.new(0, 0),
+    FooterPosition = UDim2.new(0, 10, 1, -25)
+}
 
         EnableSidebarResize = false,
         EnableCompacting = true,
@@ -4383,450 +4387,233 @@ do
         return Slider
     end
 
-    function Funcs:AddDropdown(Idx, Info)
-        Info = Library:Validate(Info, Templates.Dropdown)
+ function Funcs:AddDropdown(Idx, Info)
+    Info = Library:Validate(Info, Templates.Dropdown)
 
-        local Groupbox = self
-        local Container = Groupbox.Container
+    local Groupbox = self
+    local Container = Groupbox.Container
 
-        if Info.SpecialType == "Player" then
-            Info.Values = GetPlayers(Info.ExcludeLocalPlayer)
-            Info.AllowNull = true
-        elseif Info.SpecialType == "Team" then
-            Info.Values = GetTeams()
-            Info.AllowNull = true
+    -- Handle special types
+    if Info.SpecialType == "Player" then
+        Info.Values = GetPlayers(Info.ExcludeLocalPlayer)
+        Info.AllowNull = true
+    elseif Info.SpecialType == "Team" then
+        Info.Values = GetTeams()
+        Info.AllowNull = true
+    end
+
+    local Dropdown = {
+        Text = typeof(Info.Text) == "string" and Info.Text or nil,
+        Value = Info.Multi and {} or nil,
+        Values = Info.Values,
+        DisabledValues = Info.DisabledValues,
+        Multi = Info.Multi,
+        Tooltip = Info.Tooltip,
+        DisabledTooltip = Info.DisabledTooltip,
+        TooltipTable = nil,
+        Callback = Info.Callback,
+        Changed = Info.Changed,
+        Disabled = Info.Disabled,
+        Visible = Info.Visible,
+        Type = "Dropdown",
+    }
+
+    -- ===== Holder Frame =====
+    local Holder = New("Frame", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, Dropdown.Text and 42 or 28),
+        Visible = Dropdown.Visible,
+        Parent = Container,
+    })
+
+    -- ===== Label =====
+    local Label = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 16),
+        Text = Dropdown.Text,
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = Library.Scheme.FontColor,
+        Visible = Dropdown.Text ~= nil,
+        Parent = Holder,
+    })
+
+    -- ===== Display Button =====
+    local Display = New("TextButton", {
+        Active = not Dropdown.Disabled,
+        AnchorPoint = Vector2.new(0, 0),
+        BackgroundColor3 = Library.Scheme.MainColor,
+        BorderColor3 = Library.Scheme.OutlineColor,
+        BorderSizePixel = 1,
+        Position = UDim2.new(0, 0, 0, Dropdown.Text and 18 or 0),
+        Size = UDim2.new(1, 0, 0, 24),
+        Text = "---",
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        AutoButtonColor = false,
+        Parent = Holder,
+    })
+
+    -- Rounded corners and shadow
+    New("UICorner", { CornerRadius = UDim.new(0, 8), Parent = Display })
+    local Shadow = New("UIStroke", { Color = Library.Scheme.OutlineColor, Thickness = 1, Parent = Display })
+
+    -- Padding
+    New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 4), Parent = Display })
+
+    -- Arrow
+    local Arrow = New("ImageLabel", {
+        AnchorPoint = Vector2.new(1, 0.5),
+        Image = "rbxassetid://6031094667", -- sleek arrow
+        ImageColor3 = Library.Scheme.FontColor,
+        Size = UDim2.fromOffset(16, 16),
+        Position = UDim2.new(1, -10, 0.5, 0),
+        BackgroundTransparency = 1,
+        Parent = Display,
+    })
+
+    -- Search Box
+    local SearchBox
+    if Info.Searchable then
+        SearchBox = New("TextBox", {
+            BackgroundTransparency = 1,
+            PlaceholderText = "Search...",
+            Position = UDim2.fromOffset(0, 0),
+            Size = UDim2.new(1, -20, 1, 0),
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Visible = false,
+            Parent = Display,
+        })
+        New("UIPadding", { PaddingLeft = UDim.new(0, 10), Parent = SearchBox })
+    end
+
+    -- Context Menu
+    local Menu = Library:AddContextMenu(
+        Display,
+        function() return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, 0) end,
+        function() return { 0.5, Display.AbsoluteSize.Y + 2 } end,
+        2,
+        function(active)
+            Display.TextTransparency = (active and SearchBox) and 1 or 0
+            Arrow.Rotation = active and 180 or 0
+            if SearchBox then SearchBox.Visible = active; SearchBox.Text = "" end
         end
+    )
+    Dropdown.Menu = Menu
 
-        local Dropdown = {
-            Text = typeof(Info.Text) == "string" and Info.Text or nil,
-            Value = Info.Multi and {} or nil,
-            Values = Info.Values,
-            DisabledValues = Info.DisabledValues,
-            Multi = Info.Multi,
+    -- ===== Functions =====
+    function Dropdown:UpdateColors()
+        if Library.Unloaded then return end
+        Label.TextTransparency = Dropdown.Disabled and 0.8 or 0
+        Display.TextTransparency = Dropdown.Disabled and 0.8 or 0
+        Arrow.ImageTransparency = Dropdown.Disabled and 0.8 or Menu.Active and 0 or 0.5
+        Display.BackgroundColor3 = Library.Scheme.MainColor
+    end
 
-            SpecialType = Info.SpecialType,
-            ExcludeLocalPlayer = Info.ExcludeLocalPlayer,
+    function Dropdown:Display()
+        local text = ""
+        if Info.Multi then
+            for _, val in Dropdown.Values do
+                if Dropdown.Value[val] then
+                    text = text .. tostring(val) .. ", "
+                end
+            end
+            text = text:sub(1, #text - 2)
+        else
+            text = Dropdown.Value or "---"
+        end
+        Display.Text = text == "" and "---" or text
+    end
 
-            Tooltip = Info.Tooltip,
-            DisabledTooltip = Info.DisabledTooltip,
-            TooltipTable = nil,
+    function Dropdown:OnChanged(func)
+        Dropdown.Changed = func
+    end
 
-            Callback = Info.Callback,
-            Changed = Info.Changed,
+    -- Build menu buttons
+    local Buttons = {}
+    function Dropdown:BuildDropdownList()
+        for btn, _ in Buttons do btn:Destroy() end
+        table.clear(Buttons)
+        local count = 0
+        for _, val in Dropdown.Values do
+            if SearchBox and not tostring(val):lower():match(SearchBox.Text:lower()) then continue end
+            count += 1
+            local isDisabled = table.find(Dropdown.DisabledValues, val)
 
-            Disabled = Info.Disabled,
-            Visible = Info.Visible,
-
-            Type = "Dropdown",
-        }
-
-        local Holder = New("Frame", {
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, Dropdown.Text and 39 or 21),
-            Visible = Dropdown.Visible,
-            Parent = Container,
-        })
-
-        local Label = New("TextLabel", {
-            BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 14),
-            Text = Dropdown.Text,
-            TextSize = 14,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            Visible = not not Info.Text,
-            Parent = Holder,
-        })
-
-        local Display = New("TextButton", {
-            Active = not Dropdown.Disabled,
-            AnchorPoint = Vector2.new(0, 1),
-            BackgroundColor3 = "MainColor",
-            BorderColor3 = "OutlineColor",
-            BorderSizePixel = 1,
-            Position = UDim2.fromScale(0, 1),
-            Size = UDim2.new(1, 0, 0, 21),
-            Text = "---",
-            TextSize = 14,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = Holder,
-        })
-
-        New("UIPadding", {
-            PaddingLeft = UDim.new(0, 8),
-            PaddingRight = UDim.new(0, 4),
-            Parent = Display,
-        })
-
-        local ArrowImage = New("ImageLabel", {
-            AnchorPoint = Vector2.new(1, 0.5),
-            Image = ArrowIcon and ArrowIcon.Url or "",
-            ImageColor3 = "FontColor",
-            ImageRectOffset = ArrowIcon and ArrowIcon.ImageRectOffset or Vector2.zero,
-            ImageRectSize = ArrowIcon and ArrowIcon.ImageRectSize or Vector2.zero,
-            ImageTransparency = 0.5,
-            Position = UDim2.fromScale(1, 0.5),
-            Size = UDim2.fromOffset(16, 16),
-            Parent = Display,
-        })
-
-        local SearchBox
-        if Info.Searchable then
-            SearchBox = New("TextBox", {
-                BackgroundTransparency = 1,
-                PlaceholderText = "Search...",
-                Position = UDim2.fromOffset(-8, 0),
-                Size = UDim2.new(1, -12, 1, 0),
+            local Btn = New("TextButton", {
+                BackgroundColor3 = Library.Scheme.MainColor,
+                BackgroundTransparency = isDisabled and 0.8 or 0,
+                Text = tostring(val),
                 TextSize = 14,
+                TextColor3 = Library.Scheme.FontColor,
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Visible = false,
-                Parent = Display,
+                Size = UDim2.new(1, 0, 0, 24),
+                Parent = Menu.Menu,
             })
-            New("UIPadding", {
-                PaddingLeft = UDim.new(0, 8),
-                Parent = SearchBox,
-            })
-        end
+            New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = Btn })
+            New("UIPadding", { PaddingLeft = UDim.new(0, 10), Parent = Btn })
 
-        local MenuTable = Library:AddContextMenu(
-            Display,
-            function()
-                return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, 0)
-            end,
-            function()
-                return { 0.5, Display.AbsoluteSize.Y + 1.5 }
-            end,
-            2,
-            function(Active: boolean)
-                Display.TextTransparency = (Active and SearchBox) and 1 or 0
-                ArrowImage.ImageTransparency = Active and 0 or 0.5
-                ArrowImage.Rotation = Active and 180 or 0
-                if SearchBox then
-                    SearchBox.Text = ""
-                    SearchBox.Visible = Active
-                end
-            end
-        )
-        Dropdown.Menu = MenuTable
-
-        function Dropdown:RecalculateListSize(Count)
-            local Y = math.clamp((Count or GetTableSize(Dropdown.Values)) * 21, 0, Info.MaxVisibleDropdownItems * 21)
-
-            MenuTable:SetSize(function()
-                return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, Y)
+            Btn.MouseEnter:Connect(function()
+                Btn.BackgroundColor3 = Library.Scheme.AccentColor
             end)
-        end
+            Btn.MouseLeave:Connect(function()
+                Btn.BackgroundColor3 = Library.Scheme.MainColor
+            end)
 
-        function Dropdown:UpdateColors()
-            if Library.Unloaded then
-                return
-            end
-
-            Label.TextTransparency = Dropdown.Disabled and 0.8 or 0
-            Display.TextTransparency = Dropdown.Disabled and 0.8 or 0
-            ArrowImage.ImageTransparency = Dropdown.Disabled and 0.8 or MenuTable.Active and 0 or 0.5
-        end
-
-        function Dropdown:Display()
-            if Library.Unloaded then
-                return
-            end
-
-            local Str = ""
-
-            if Info.Multi then
-                for _, Value in Dropdown.Values do
-                    if Dropdown.Value[Value] then
-                        Str = Str
-                            .. (Info.FormatDisplayValue and tostring(Info.FormatDisplayValue(Value)) or tostring(Value))
-                            .. ", "
-                    end
-                end
-
-                Str = Str:sub(1, #Str - 2)
-            else
-                Str = Dropdown.Value and tostring(Dropdown.Value) or ""
-                if Str ~= "" and Info.FormatDisplayValue then
-                    Str = tostring(Info.FormatDisplayValue(Str))
-                end
-            end
-
-            if #Str > 25 then
-                Str = Str:sub(1, 22) .. "..."
-            end
-
-            Display.Text = (Str == "" and "---" or Str)
-        end
-
-        function Dropdown:OnChanged(Func)
-            Dropdown.Changed = Func
-        end
-
-        function Dropdown:GetActiveValues()
-            if Info.Multi then
-                local Table = {}
-
-                for Value, _ in Dropdown.Value do
-                    table.insert(Table, Value)
-                end
-
-                return Table
-            end
-
-            return Dropdown.Value and 1 or 0
-        end
-
-        local Buttons = {}
-        function Dropdown:BuildDropdownList()
-            local Values = Dropdown.Values
-            local DisabledValues = Dropdown.DisabledValues
-
-            for Button, _ in Buttons do
-                Button:Destroy()
-            end
-            table.clear(Buttons)
-
-            local Count = 0
-            for _, Value in Values do
-                if SearchBox and not tostring(Value):lower():match(SearchBox.Text:lower()) then
-                    continue
-                end
-
-                Count += 1
-                local IsDisabled = table.find(DisabledValues, Value)
-                local Table = {}
-
-                local Button = New("TextButton", {
-                    BackgroundColor3 = "MainColor",
-                    BackgroundTransparency = 1,
-                    LayoutOrder = IsDisabled and 1 or 0,
-                    Size = UDim2.new(1, 0, 0, 21),
-                    Text = tostring(Value),
-                    TextSize = 14,
-                    TextTransparency = 0.5,
-                    TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = MenuTable.Menu,
-                })
-                New("UIPadding", {
-                    PaddingLeft = UDim.new(0, 7),
-                    PaddingRight = UDim.new(0, 7),
-                    Parent = Button,
-                })
-
-                local Selected
+            Btn.MouseButton1Click:Connect(function()
                 if Info.Multi then
-                    Selected = Dropdown.Value[Value]
+                    Dropdown.Value[val] = not Dropdown.Value[val]
                 else
-                    Selected = Dropdown.Value == Value
+                    Dropdown.Value = val
+                    Menu:Close()
                 end
-
-                function Table:UpdateButton()
-                    if Info.Multi then
-                        Selected = Dropdown.Value[Value]
-                    else
-                        Selected = Dropdown.Value == Value
-                    end
-
-                    Button.BackgroundTransparency = Selected and 0 or 1
-                    Button.TextTransparency = IsDisabled and 0.8 or Selected and 0 or 0.5
-                end
-
-                if not IsDisabled then
-                    Button.MouseButton1Click:Connect(function()
-                        local Try = not Selected
-
-                        if not (Dropdown:GetActiveValues() == 1 and not Try and not Info.AllowNull) then
-                            Selected = Try
-                            if Info.Multi then
-                                Dropdown.Value[Value] = Selected and true or nil
-                            else
-                                Dropdown.Value = Selected and Value or nil
-                            end
-
-                            for _, OtherButton in Buttons do
-                                OtherButton:UpdateButton()
-                            end
-                        end
-
-                        Table:UpdateButton()
-                        Dropdown:Display()
-
-                        Library:UpdateDependencyBoxes()
-                        Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
-                        Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
-                    end)
-                end
-
-                Table:UpdateButton()
                 Dropdown:Display()
-
-                Buttons[Button] = Table
-            end
-
-            Dropdown:RecalculateListSize(Count)
-        end
-
-        function Dropdown:SetValue(Value)
-            if Info.Multi then
-                local Table = {}
-
-                for Val, Active in Value or {} do
-                    if typeof(Active) ~= "boolean" then
-                        Table[Active] = true
-                    elseif Active and table.find(Dropdown.Values, Val) then
-                        Table[Val] = true
-                    end
-                end
-
-                Dropdown.Value = Table
-            else
-                if table.find(Dropdown.Values, Value) then
-                    Dropdown.Value = Value
-                elseif not Value then
-                    Dropdown.Value = nil
-                end
-            end
-
-            Dropdown:Display()
-            for _, Button in Buttons do
-                Button:UpdateButton()
-            end
-
-            if not Dropdown.Disabled then
-                Library:UpdateDependencyBoxes()
                 Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
                 Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
-            end
+            end)
+
+            Buttons[Btn] = true
         end
+        local height = math.clamp(count * 24, 0, Info.MaxVisibleDropdownItems * 24)
+        Menu:SetSize(function() return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, height) end)
+    end
 
-        function Dropdown:SetValues(Values)
-            Dropdown.Values = Values
-            Dropdown:BuildDropdownList()
-        end
-
-        function Dropdown:AddValues(Values)
-            if typeof(Values) == "table" then
-                for _, val in Values do
-                    table.insert(Dropdown.Values, val)
-                end
-            elseif typeof(Values) == "string" then
-                table.insert(Dropdown.Values, Values)
-            else
-                return
-            end
-
-            Dropdown:BuildDropdownList()
-        end
-
-        function Dropdown:SetDisabledValues(DisabledValues)
-            Dropdown.DisabledValues = DisabledValues
-            Dropdown:BuildDropdownList()
-        end
-
-        function Dropdown:AddDisabledValues(DisabledValues)
-            if typeof(DisabledValues) == "table" then
-                for _, val in DisabledValues do
-                    table.insert(Dropdown.DisabledValues, val)
-                end
-            elseif typeof(DisabledValues) == "string" then
-                table.insert(Dropdown.DisabledValues, DisabledValues)
-            else
-                return
-            end
-
-            Dropdown:BuildDropdownList()
-        end
-
-        function Dropdown:SetDisabled(Disabled: boolean)
-            Dropdown.Disabled = Disabled
-
-            if Dropdown.TooltipTable then
-                Dropdown.TooltipTable.Disabled = Dropdown.Disabled
-            end
-
-            MenuTable:Close()
-            Display.Active = not Dropdown.Disabled
-            Dropdown:UpdateColors()
-        end
-
-        function Dropdown:SetVisible(Visible: boolean)
-            Dropdown.Visible = Visible
-
-            Holder.Visible = Dropdown.Visible
-            Groupbox:Resize()
-        end
-
-        function Dropdown:SetText(Text: string)
-            Dropdown.Text = Text
-            Holder.Size = UDim2.new(1, 0, 0, Text and 39 or 21)
-
-            Label.Text = Text and Text or ""
-            Label.Visible = not not Text
-        end
-
-        Display.MouseButton1Click:Connect(function()
-            if Dropdown.Disabled then
-                return
-            end
-
-            MenuTable:Toggle()
-        end)
-
-        if SearchBox then
-            SearchBox:GetPropertyChangedSignal("Text"):Connect(Dropdown.BuildDropdownList)
-        end
-
-        local Defaults = {}
-        if typeof(Info.Default) == "string" then
-            local Index = table.find(Dropdown.Values, Info.Default)
-            if Index then
-                table.insert(Defaults, Index)
-            end
-        elseif typeof(Info.Default) == "table" then
-            for _, Value in next, Info.Default do
-                local Index = table.find(Dropdown.Values, Value)
-                if Index then
-                    table.insert(Defaults, Index)
-                end
-            end
-        elseif Dropdown.Values[Info.Default] ~= nil then
-            table.insert(Defaults, Info.Default)
-        end
-
-        if next(Defaults) then
-            for i = 1, #Defaults do
-                local Index = Defaults[i]
-                if Info.Multi then
-                    Dropdown.Value[Dropdown.Values[Index]] = true
-                else
-                    Dropdown.Value = Dropdown.Values[Index]
-                end
-
-                if not Info.Multi then
-                    break
-                end
-            end
-        end
-
-        if typeof(Dropdown.Tooltip) == "string" or typeof(Dropdown.DisabledTooltip) == "string" then
-            Dropdown.TooltipTable = Library:AddTooltip(Dropdown.Tooltip, Dropdown.DisabledTooltip, Display)
-            Dropdown.TooltipTable.Disabled = Dropdown.Disabled
-        end
-
-        Dropdown:UpdateColors()
+    function Dropdown:SetValue(value)
+        Dropdown.Value = value
         Dropdown:Display()
         Dropdown:BuildDropdownList()
-        Groupbox:Resize()
-
-        Dropdown.Holder = Holder
-        table.insert(Groupbox.Elements, Dropdown)
-
-        Dropdown.Default = Defaults
-        Dropdown.DefaultValues = Dropdown.Values
-
-        Options[Idx] = Dropdown
-
-        return Dropdown
     end
+
+    function Dropdown:SetDisabled(bool)
+        Dropdown.Disabled = bool
+        Display.Active = not bool
+        Dropdown:UpdateColors()
+        Menu:Close()
+    end
+
+    Display.MouseButton1Click:Connect(function()
+        if not Dropdown.Disabled then
+            Menu:Toggle()
+        end
+    end)
+
+    if SearchBox then
+        SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+            Dropdown:BuildDropdownList()
+        end)
+    end
+
+    Dropdown:UpdateColors()
+    Dropdown:Display()
+    Dropdown:BuildDropdownList()
+    Groupbox:Resize()
+
+    Dropdown.Holder = Holder
+    table.insert(Groupbox.Elements, Dropdown)
+    Options[Idx] = Dropdown
+    return Dropdown
+end
 
     function Funcs:AddViewport(Idx, Info)
         Info = Library:Validate(Info, Templates.Viewport)
