@@ -6158,6 +6158,7 @@ function Library:CreateWindow(WindowInfo)
         New("UIListLayout", {
             Parent = Tabs,
         })
+
         --// Container \\--
         Container = New("Frame", {
             AnchorPoint = Vector2.new(1, 0),
