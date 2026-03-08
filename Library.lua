@@ -1188,77 +1188,29 @@ do
     })
 end
 
---// Notification Area
+--// Notification
 local NotificationArea
 local NotificationList
 do
     NotificationArea = New("Frame", {
         AnchorPoint = Vector2.new(1, 0),
         BackgroundTransparency = 1,
-        Position = UDim2.new(1, -12, 0, 12), -- slightly inset for premium feel
-        Size = UDim2.new(0, 320, 1, -24),
+        Position = UDim2.new(1, -6, 0, 6),
+        Size = UDim2.new(0, 300, 1, -6),
         Parent = ScreenGui,
-        ZIndex = 50, -- make sure it overlays UI
     })
-    
-    -- Add a subtle scale for DPI adjustments
-    table.insert(Library.Scales, New("UIScale", { Parent = NotificationArea, Scale = 1 }))
-
-    -- Vertical list of notifications, smooth spacing
-    NotificationList = New("UIListLayout", {
-        HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        VerticalAlignment = Enum.VerticalAlignment.Top,
-        Padding = UDim.new(0, 10), -- more spacing for premium look
-        SortOrder = Enum.SortOrder.LayoutOrder,
-        Parent = NotificationArea,
-    })
-
-    -- Optional: Add UIStroke for subtle outlines around each notification
-    local function CreateNotification(Text, Duration)
-        Duration = Duration or 3
-        local NotifyFrame = New("Frame", {
-            Size = UDim2.new(1, -8, 0, 48),
-            BackgroundColor3 = Library.Scheme.MainColor,
-            BorderSizePixel = 0,
+    table.insert(
+        Library.Scales,
+        New("UIScale", {
             Parent = NotificationArea,
         })
-        New("UICorner", { CornerRadius = UDim.new(0, 12), Parent = NotifyFrame })
-        New("UIStroke", { Color = Library.Scheme.OutlineColor, Thickness = 1, Transparency = 0.6, Parent = NotifyFrame })
+    )
 
-        local Label = New("TextLabel", {
-            Size = UDim2.new(1, -16, 1, -16),
-            Position = UDim2.new(0, 8, 0, 8),
-            BackgroundTransparency = 1,
-            Text = Text,
-            TextColor3 = Library.Scheme.FontColor,
-            TextSize = 14,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            TextYAlignment = Enum.TextYAlignment.Center,
-            Parent = NotifyFrame,
-        })
-
-        -- Fade in animation
-        NotifyFrame.Position = UDim2.new(1, 400, 0, NotifyFrame.Position.Y.Offset)
-        TweenService:Create(
-            NotifyFrame,
-            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-            { Position = UDim2.new(1, -6, NotifyFrame.Position.Y.Scale, NotifyFrame.Position.Y.Offset) }
-        ):Play()
-
-        -- Auto remove after duration
-        task.spawn(function()
-            task.wait(Duration)
-            TweenService:Create(
-                NotifyFrame,
-                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-                { Position = UDim2.new(1, 400, NotifyFrame.Position.Y.Scale, NotifyFrame.Position.Y.Offset), Transparency = 1 }
-            ):Play()
-            task.wait(0.3)
-            NotifyFrame:Destroy()
-        end)
-    end
-
-    Library.Notify = CreateNotification -- overwrite for convenience
+    NotificationList = New("UIListLayout", {
+        HorizontalAlignment = Enum.HorizontalAlignment.Right,
+        Padding = UDim.new(0, 8),
+        Parent = NotificationArea,
+    })
 end
 
 --// Lib Functions \\--
@@ -3441,143 +3393,153 @@ do
         Button.Base, Button.Stroke = CreateButton(Button)
         InitEvents(Button)
 
-    function Button:AddButton(...)
-    local Info = GetInfo(...)
+        function Button:AddButton(...)
+            local Info = GetInfo(...)
 
-    local SubButton = {
-        Text = Info.Text,
-        Func = Info.Func,
-        DoubleClick = Info.DoubleClick,
+            local SubButton = {
+                Text = Info.Text,
+                Func = Info.Func,
+                DoubleClick = Info.DoubleClick,
 
-        Tooltip = Info.Tooltip,
-        DisabledTooltip = Info.DisabledTooltip,
-        TooltipTable = nil,
+                Tooltip = Info.Tooltip,
+                DisabledTooltip = Info.DisabledTooltip,
+                TooltipTable = nil,
 
-        Risky = Info.Risky,
-        Disabled = Info.Disabled,
-        Visible = Info.Visible,
+                Risky = Info.Risky,
+                Disabled = Info.Disabled,
+                Visible = Info.Visible,
 
-        Tween = nil,
-        Type = "SubButton",
-    }
+                Tween = nil,
+                Type = "SubButton",
+            }
 
-    Button.SubButton = SubButton
+            Button.SubButton = SubButton
+            SubButton.Base, SubButton.Stroke = CreateButton(SubButton)
+            InitEvents(SubButton)
 
-    -- ===== Create the button with premium style =====
-    SubButton.Base, SubButton.Stroke = CreateButton(SubButton)
+            function SubButton:UpdateColors()
+                if Library.Unloaded then
+                    return
+                end
 
-    -- Add rounded corners
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = SubButton.Base
+                StopTween(SubButton.Tween)
 
-    -- Add subtle shadow
-    local shadow = Instance.new("UIStroke")
-    shadow.Color = Color3.fromRGB(0,0,0)
-    shadow.Transparency = 0.7
-    shadow.Thickness = 1
-    shadow.Parent = SubButton.Base
+                SubButton.Base.BackgroundColor3 = SubButton.Disabled and Library.Scheme.BackgroundColor
+                    or Library.Scheme.MainColor
+                SubButton.Base.TextTransparency = SubButton.Disabled and 0.8 or 0.4
+                SubButton.Stroke.Transparency = SubButton.Disabled and 0.5 or 0
 
-    -- Gradient overlay for hover effect
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Library.Scheme.MainColor),
-        ColorSequenceKeypoint.new(1, Library.Scheme.MainColor:Lerp(Color3.new(1,1,1), 0.1))
-    })
-    gradient.Rotation = 45
-    gradient.Parent = SubButton.Base
+                Library.Registry[SubButton.Base].BackgroundColor3 = SubButton.Disabled and "BackgroundColor"
+                    or "MainColor"
+            end
 
-    InitEvents(SubButton)
+            function SubButton:SetDisabled(Disabled: boolean)
+                SubButton.Disabled = Disabled
 
-    -- ===== Smooth color animations =====
-    function SubButton:UpdateColors()
-        if Library.Unloaded then return end
-        StopTween(SubButton.Tween)
+                if SubButton.TooltipTable then
+                    SubButton.TooltipTable.Disabled = SubButton.Disabled
+                end
 
-        local targetColor = SubButton.Disabled and Library.Scheme.BackgroundColor or Library.Scheme.MainColor
-        local targetText = SubButton.Disabled and 0.8 or 0.4
-        local targetStroke = SubButton.Disabled and 0.5 or 0
+                SubButton.Base.Active = not SubButton.Disabled
+                SubButton:UpdateColors()
+            end
 
-        -- Tween background
-        SubButton.Tween = game:GetService("TweenService"):Create(
-            SubButton.Base,
-            TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-            {BackgroundColor3 = targetColor}
-        )
-        SubButton.Tween:Play()
+            function SubButton:SetVisible(Visible: boolean)
+                SubButton.Visible = Visible
 
-        SubButton.Base.TextTransparency = targetText
-        SubButton.Stroke.Transparency = targetStroke
+                SubButton.Base.Visible = SubButton.Visible
+                Groupbox:Resize()
+            end
 
-        if SubButton.Risky then
-            SubButton.Base.TextColor3 = Library.Scheme.RedColor
-        else
-            SubButton.Base.TextColor3 = Color3.fromRGB(255,255,255)
+            function SubButton:SetText(Text: string)
+                SubButton.Text = Text
+                SubButton.Base.Text = Text
+            end
+
+            if typeof(SubButton.Tooltip) == "string" or typeof(SubButton.DisabledTooltip) == "string" then
+                SubButton.TooltipTable =
+                    Library:AddTooltip(SubButton.Tooltip, SubButton.DisabledTooltip, SubButton.Base)
+                SubButton.TooltipTable.Disabled = SubButton.Disabled
+            end
+
+            if SubButton.Risky then
+                SubButton.Base.TextColor3 = Library.Scheme.RedColor
+                Library.Registry[SubButton.Base].TextColor3 = "RedColor"
+            end
+
+            SubButton:UpdateColors()
+
+            if Info.Idx then
+                Buttons[Info.Idx] = SubButton
+            else
+                table.insert(Buttons, SubButton)
+            end
+
+            return SubButton
         end
-    end
 
-    function SubButton:SetDisabled(Disabled)
-        SubButton.Disabled = Disabled
-        if SubButton.TooltipTable then SubButton.TooltipTable.Disabled = Disabled end
-        SubButton.Base.Active = not Disabled
-        SubButton:UpdateColors()
-    end
+        function Button:UpdateColors()
+            if Library.Unloaded then
+                return
+            end
 
-    function SubButton:SetVisible(Visible)
-        SubButton.Visible = Visible
-        SubButton.Base.Visible = Visible
+            StopTween(Button.Tween)
+
+            Button.Base.BackgroundColor3 = Button.Disabled and Library.Scheme.BackgroundColor
+                or Library.Scheme.MainColor
+            Button.Base.TextTransparency = Button.Disabled and 0.8 or 0.4
+            Button.Stroke.Transparency = Button.Disabled and 0.5 or 0
+
+            Library.Registry[Button.Base].BackgroundColor3 = Button.Disabled and "BackgroundColor" or "MainColor"
+        end
+
+        function Button:SetDisabled(Disabled: boolean)
+            Button.Disabled = Disabled
+
+            if Button.TooltipTable then
+                Button.TooltipTable.Disabled = Button.Disabled
+            end
+
+            Button.Base.Active = not Button.Disabled
+            Button:UpdateColors()
+        end
+
+        function Button:SetVisible(Visible: boolean)
+            Button.Visible = Visible
+
+            Holder.Visible = Button.Visible
+            Groupbox:Resize()
+        end
+
+        function Button:SetText(Text: string)
+            Button.Text = Text
+            Button.Base.Text = Text
+        end
+
+        if typeof(Button.Tooltip) == "string" or typeof(Button.DisabledTooltip) == "string" then
+            Button.TooltipTable = Library:AddTooltip(Button.Tooltip, Button.DisabledTooltip, Button.Base)
+            Button.TooltipTable.Disabled = Button.Disabled
+        end
+
+        if Button.Risky then
+            Button.Base.TextColor3 = Library.Scheme.RedColor
+            Library.Registry[Button.Base].TextColor3 = "RedColor"
+        end
+
+        Button:UpdateColors()
         Groupbox:Resize()
-    end
 
-    function SubButton:SetText(Text)
-        SubButton.Text = Text
-        SubButton.Base.Text = Text
-    end
+        Button.Holder = Holder
+        table.insert(Groupbox.Elements, Button)
 
-    -- Tooltip
-    if typeof(SubButton.Tooltip) == "string" or typeof(SubButton.DisabledTooltip) == "string" then
-        SubButton.TooltipTable = Library:AddTooltip(SubButton.Tooltip, SubButton.DisabledTooltip, SubButton.Base)
-        SubButton.TooltipTable.Disabled = SubButton.Disabled
-    end
-
-    -- SubButton hover effect
-    SubButton.Base.MouseEnter:Connect(function()
-        if not SubButton.Disabled then
-            local hoverTween = game:GetService("TweenService"):Create(
-                SubButton.Base,
-                TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-                {BackgroundColor3 = Library.Scheme.MainColor:Lerp(Color3.fromRGB(255,255,255),0.08)}
-            )
-            hoverTween:Play()
+        if Info.Idx then
+            Buttons[Info.Idx] = Button
+        else
+            table.insert(Buttons, Button)
         end
-    end)
-    SubButton.Base.MouseLeave:Connect(function()
-        SubButton:UpdateColors()
-    end)
-    SubButton.Base.MouseButton1Click:Connect(function()
-        if not SubButton.Disabled then
-            SubButton.Base.Position = SubButton.Base.Position + UDim2.fromOffset(1,1)
-            task.delay(0.05,function()
-                SubButton.Base.Position = SubButton.Base.Position - UDim2.fromOffset(1,1)
-            end)
-            Library:SafeCallback(SubButton.Func)
-        end
-    end)
 
-    SubButton:UpdateColors()
-    Groupbox:Resize()
-
-    SubButton.Holder = SubButton.Base
-    table.insert(Groupbox.Elements, SubButton)
-
-    if Info.Idx then
-        Buttons[Info.Idx] = SubButton
-    else
-        table.insert(Buttons, SubButton)
+        return Button
     end
-
-    return SubButton
-end
 
     function Funcs:AddCheckbox(Idx, Info)
         Info = Library:Validate(Info, Templates.Toggle)
@@ -3778,198 +3740,228 @@ end
         return Toggle
     end
 
-function Funcs:AddToggle(Idx, Info)
-    if Library.ForceCheckbox then
-        return Funcs.AddCheckbox(self, Idx, Info)
-    end
-
-    Info = Library:Validate(Info, Templates.Toggle)
-
-    local Groupbox = self
-    local Container = Groupbox.Container
-
-    local Toggle = {
-        Text = Info.Text,
-        Value = Info.Default,
-
-        Tooltip = Info.Tooltip,
-        DisabledTooltip = Info.DisabledTooltip,
-        TooltipTable = nil,
-
-        Callback = Info.Callback,
-        Changed = Info.Changed,
-
-        Risky = Info.Risky,
-        Disabled = Info.Disabled,
-        Visible = Info.Visible,
-        Addons = {},
-
-        Type = "Toggle",
-    }
-
-    local Button = New("TextButton", {
-        Active = not Toggle.Disabled,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 18),
-        Text = "",
-        Visible = Toggle.Visible,
-        Parent = Container,
-    })
-
-    local Label = New("TextLabel", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -40, 1, 0),
-        Text = Toggle.Text,
-        TextSize = 14,
-        TextTransparency = 0.4,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = Button,
-    })
-
-    New("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal,
-        HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        Padding = UDim.new(0, 6),
-        Parent = Label,
-    })
-
-    -- ====== Circle-style toggle (Ring + Dot) ======
-    local Ring = New("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundColor3 = "MainColor",
-        Position = UDim2.new(1, 0, 0.5, 0),
-        Size = UDim2.fromOffset(18, 18),
-        Parent = Button,
-    })
-    Library.Registry[Ring] = {}
-
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Ring,
-    })
-
-    local RingStroke = New("UIStroke", {
-        Color = "OutlineColor",
-        Parent = Ring,
-    })
-    Library.Registry[RingStroke] = {}
-
-    local Dot = New("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = "AccentColor",
-        BackgroundTransparency = 1,
-        Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromOffset(0, 0),
-        Parent = Ring,
-    })
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Dot,
-    })
-    -- ====== End Circle toggle ======
-
-    function Toggle:UpdateColors()
-        Toggle:Display()
-    end
-
-    function Toggle:Display()
-        if Library.Unloaded then return end
-
-        if Toggle.Disabled then
-            Label.TextTransparency = 0.8
-            Ring.BackgroundTransparency = 0.5
-            RingStroke.Transparency = 0.5
-            Dot.BackgroundTransparency = 1
-            Dot.Size = UDim2.fromOffset(0, 0)
-            return
+    function Funcs:AddToggle(Idx, Info)
+        if Library.ForceCheckbox then
+            return Funcs.AddCheckbox(self, Idx, Info)
         end
 
-        Ring.BackgroundTransparency = 0
-        RingStroke.Transparency = 0
+        Info = Library:Validate(Info, Templates.Toggle)
 
-        Ring.BackgroundColor3 = Library.Scheme.MainColor
-        Library.Registry[Ring].BackgroundColor3 = "MainColor"
+        local Groupbox = self
+        local Container = Groupbox.Container
 
-        RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
-        Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+        local Toggle = {
+            Text = Info.Text,
+            Value = Info.Default,
 
-        TweenService:Create(Label, Library.TweenInfo, {
-            TextTransparency = Toggle.Value and 0 or 0.4,
-        }):Play()
+            Tooltip = Info.Tooltip,
+            DisabledTooltip = Info.DisabledTooltip,
+            TooltipTable = nil,
 
-        TweenService:Create(Dot,
-            TweenInfo.new(Toggle.Value and 0.22 or 0.15,
-            Toggle.Value and Enum.EasingStyle.Back or Enum.EasingStyle.Quad,
-            Toggle.Value and Enum.EasingDirection.Out or Enum.EasingDirection.In), {
-            Size = Toggle.Value and UDim2.fromOffset(10,10) or UDim2.fromOffset(0,0),
-            BackgroundTransparency = Toggle.Value and 0 or 1
-        }):Play()
-    end
+            Callback = Info.Callback,
+            Changed = Info.Changed,
 
-    function Toggle:SetValue(Value)
-        if Toggle.Disabled then return end
-        Toggle.Value = Value
-        Toggle:Display()
+            Risky = Info.Risky,
+            Disabled = Info.Disabled,
+            Visible = Info.Visible,
+            Addons = {},
 
-        for _, Addon in Toggle.Addons do
-            if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
-                Addon.Toggled = Toggle.Value
-                Addon:Update()
+            Type = "Toggle",
+        }
+
+        local Button = New("TextButton", {
+            Active = not Toggle.Disabled,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 18),
+            Text = "",
+            Visible = Toggle.Visible,
+            Parent = Container,
+        })
+
+        local Label = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -40, 1, 0),
+            Text = Toggle.Text,
+            TextSize = 14,
+            TextTransparency = 0.4,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = Button,
+        })
+
+        New("UIListLayout", {
+            FillDirection = Enum.FillDirection.Horizontal,
+            HorizontalAlignment = Enum.HorizontalAlignment.Right,
+            Padding = UDim.new(0, 6),
+            Parent = Label,
+        })
+
+        local Switch = New("Frame", {
+            AnchorPoint = Vector2.new(1, 0),
+            BackgroundColor3 = "MainColor",
+            Position = UDim2.fromScale(1, 0),
+            Size = UDim2.fromOffset(32, 18),
+            Parent = Button,
+        })
+        New("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+            Parent = Switch,
+        })
+        New("UIPadding", {
+            PaddingBottom = UDim.new(0, 2),
+            PaddingLeft = UDim.new(0, 2),
+            PaddingRight = UDim.new(0, 2),
+            PaddingTop = UDim.new(0, 2),
+            Parent = Switch,
+        })
+        local SwitchStroke = New("UIStroke", {
+            Color = "OutlineColor",
+            Parent = Switch,
+        })
+
+        local Ball = New("Frame", {
+            BackgroundColor3 = "FontColor",
+            Size = UDim2.fromScale(1, 1),
+            SizeConstraint = Enum.SizeConstraint.RelativeYY,
+            Parent = Switch,
+        })
+        New("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+            Parent = Ball,
+        })
+
+        function Toggle:UpdateColors()
+            Toggle:Display()
+        end
+
+        function Toggle:Display()
+            if Library.Unloaded then
+                return
             end
+
+            local Offset = Toggle.Value and 1 or 0
+
+            Switch.BackgroundTransparency = Toggle.Disabled and 0.75 or 0
+            SwitchStroke.Transparency = Toggle.Disabled and 0.75 or 0
+
+            Switch.BackgroundColor3 = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.MainColor
+            SwitchStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+
+            Library.Registry[Switch].BackgroundColor3 = Toggle.Value and "AccentColor" or "MainColor"
+            Library.Registry[SwitchStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+
+            if Toggle.Disabled then
+                Label.TextTransparency = 0.8
+                Ball.AnchorPoint = Vector2.new(Offset, 0)
+                Ball.Position = UDim2.fromScale(Offset, 0)
+
+                Ball.BackgroundColor3 = Library:GetDarkerColor(Library.Scheme.FontColor)
+                Library.Registry[Ball].BackgroundColor3 = function()
+                    return Library:GetDarkerColor(Library.Scheme.FontColor)
+                end
+
+                return
+            end
+
+            TweenService:Create(Label, Library.TweenInfo, {
+                TextTransparency = Toggle.Value and 0 or 0.4,
+            }):Play()
+            TweenService:Create(Ball, Library.TweenInfo, {
+                AnchorPoint = Vector2.new(Offset, 0),
+                Position = UDim2.fromScale(Offset, 0),
+            }):Play()
+
+            Ball.BackgroundColor3 = Library.Scheme.FontColor
+            Library.Registry[Ball].BackgroundColor3 = "FontColor"
         end
 
-        Library:UpdateDependencyBoxes()
-        Library:SafeCallback(Toggle.Callback, Toggle.Value)
-        Library:SafeCallback(Toggle.Changed, Toggle.Value)
-    end
+        function Toggle:OnChanged(Func)
+            Toggle.Changed = Func
+        end
 
-    function Toggle:SetDisabled(Disabled)
-        Toggle.Disabled = Disabled
-        if Toggle.TooltipTable then
+        function Toggle:SetValue(Value)
+            if Toggle.Disabled then
+                return
+            end
+
+            Toggle.Value = Value
+            Toggle:Display()
+
+            for _, Addon in Toggle.Addons do
+                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
+                    Addon.Toggled = Toggle.Value
+                    Addon:Update()
+                end
+            end
+
+            Library:UpdateDependencyBoxes()
+            Library:SafeCallback(Toggle.Callback, Toggle.Value)
+            Library:SafeCallback(Toggle.Changed, Toggle.Value)
+        end
+
+        function Toggle:SetDisabled(Disabled: boolean)
+            Toggle.Disabled = Disabled
+
+            if Toggle.TooltipTable then
+                Toggle.TooltipTable.Disabled = Toggle.Disabled
+            end
+
+            for _, Addon in Toggle.Addons do
+                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
+                    Addon:Update()
+                end
+            end
+
+            Button.Active = not Toggle.Disabled
+            Toggle:Display()
+        end
+
+        function Toggle:SetVisible(Visible: boolean)
+            Toggle.Visible = Visible
+
+            Button.Visible = Toggle.Visible
+            Groupbox:Resize()
+        end
+
+        function Toggle:SetText(Text: string)
+            Toggle.Text = Text
+            Label.Text = Text
+        end
+
+        Button.MouseButton1Click:Connect(function()
+            if Toggle.Disabled then
+                return
+            end
+
+            Toggle:SetValue(not Toggle.Value)
+        end)
+
+        if typeof(Toggle.Tooltip) == "string" or typeof(Toggle.DisabledTooltip) == "string" then
+            Toggle.TooltipTable = Library:AddTooltip(Toggle.Tooltip, Toggle.DisabledTooltip, Button)
             Toggle.TooltipTable.Disabled = Toggle.Disabled
         end
-        Button.Active = not Toggle.Disabled
-        Toggle:Display()
-    end
 
-    function Toggle:SetText(Text)
-        Toggle.Text = Text
-        Label.Text = Text
-    end
-
-    -- ====== Add OnChanged support for chaining ======
-    function Toggle:OnChanged(Func)
-        Toggle.Changed = Func
-        return Toggle -- important for chaining
-    end
-
-    Button.MouseButton1Click:Connect(function()
-        if not Toggle.Disabled then
-            Toggle:SetValue(not Toggle.Value)
+        if Toggle.Risky then
+            Label.TextColor3 = Library.Scheme.RedColor
+            Library.Registry[Label].TextColor3 = "RedColor"
         end
-    end)
 
-    -- Risky color
-    if Toggle.Risky then
-        Label.TextColor3 = Library.Scheme.RedColor
-        Library.Registry[Label].TextColor3 = "RedColor"
+        Toggle:Display()
+        Groupbox:Resize()
+
+        Toggle.TextLabel = Label
+        Toggle.Container = Container
+        setmetatable(Toggle, BaseAddons)
+
+        Toggle.Holder = Button
+        table.insert(Groupbox.Elements, Toggle)
+
+        Toggle.Default = Toggle.Value
+
+        Toggles[Idx] = Toggle
+
+        return Toggle
     end
 
-    Toggle:Display()
-    Groupbox:Resize()
-
-    Toggle.TextLabel = Label
-    Toggle.Container = Container
-    setmetatable(Toggle, BaseAddons)
-
-    Toggle.Holder = Button
-    table.insert(Groupbox.Elements, Toggle)
-
-    Toggle.Default = Toggle.Value
-    Toggles[Idx] = Toggle
-
-    return Toggle
-end
     function Funcs:AddInput(Idx, Info)
         Info = Library:Validate(Info, Templates.Input)
 
@@ -4391,233 +4383,450 @@ end
         return Slider
     end
 
-  function Funcs:AddDropdown(Idx, Info)
-    Info = Library:Validate(Info, Templates.Dropdown)
+    function Funcs:AddDropdown(Idx, Info)
+        Info = Library:Validate(Info, Templates.Dropdown)
 
-    local Groupbox = self
-    local Container = Groupbox.Container
+        local Groupbox = self
+        local Container = Groupbox.Container
 
-    -- Handle special types
-    if Info.SpecialType == "Player" then
-        Info.Values = GetPlayers(Info.ExcludeLocalPlayer)
-        Info.AllowNull = true
-    elseif Info.SpecialType == "Team" then
-        Info.Values = GetTeams()
-        Info.AllowNull = true
-    end
+        if Info.SpecialType == "Player" then
+            Info.Values = GetPlayers(Info.ExcludeLocalPlayer)
+            Info.AllowNull = true
+        elseif Info.SpecialType == "Team" then
+            Info.Values = GetTeams()
+            Info.AllowNull = true
+        end
 
-    local Dropdown = {
-        Text = typeof(Info.Text) == "string" and Info.Text or nil,
-        Value = Info.Multi and {} or nil,
-        Values = Info.Values,
-        DisabledValues = Info.DisabledValues,
-        Multi = Info.Multi,
-        Tooltip = Info.Tooltip,
-        DisabledTooltip = Info.DisabledTooltip,
-        TooltipTable = nil,
-        Callback = Info.Callback,
-        Changed = Info.Changed,
-        Disabled = Info.Disabled,
-        Visible = Info.Visible,
-        Type = "Dropdown",
-    }
+        local Dropdown = {
+            Text = typeof(Info.Text) == "string" and Info.Text or nil,
+            Value = Info.Multi and {} or nil,
+            Values = Info.Values,
+            DisabledValues = Info.DisabledValues,
+            Multi = Info.Multi,
 
-    -- ===== Holder Frame =====
-    local Holder = New("Frame", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, Dropdown.Text and 42 or 28),
-        Visible = Dropdown.Visible,
-        Parent = Container,
-    })
+            SpecialType = Info.SpecialType,
+            ExcludeLocalPlayer = Info.ExcludeLocalPlayer,
 
-    -- ===== Label =====
-    local Label = New("TextLabel", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 16),
-        Text = Dropdown.Text,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = Library.Scheme.FontColor,
-        Visible = Dropdown.Text ~= nil,
-        Parent = Holder,
-    })
+            Tooltip = Info.Tooltip,
+            DisabledTooltip = Info.DisabledTooltip,
+            TooltipTable = nil,
 
-    -- ===== Display Button =====
-    local Display = New("TextButton", {
-        Active = not Dropdown.Disabled,
-        AnchorPoint = Vector2.new(0, 0),
-        BackgroundColor3 = Library.Scheme.MainColor,
-        BorderColor3 = Library.Scheme.OutlineColor,
-        BorderSizePixel = 1,
-        Position = UDim2.new(0, 0, 0, Dropdown.Text and 18 or 0),
-        Size = UDim2.new(1, 0, 0, 24),
-        Text = "---",
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        AutoButtonColor = false,
-        Parent = Holder,
-    })
+            Callback = Info.Callback,
+            Changed = Info.Changed,
 
-    -- Rounded corners and shadow
-    New("UICorner", { CornerRadius = UDim.new(0, 8), Parent = Display })
-    local Shadow = New("UIStroke", { Color = Library.Scheme.OutlineColor, Thickness = 1, Parent = Display })
+            Disabled = Info.Disabled,
+            Visible = Info.Visible,
 
-    -- Padding
-    New("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 4), Parent = Display })
+            Type = "Dropdown",
+        }
 
-    -- Arrow
-    local Arrow = New("ImageLabel", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        Image = "rbxassetid://6031094667", -- sleek arrow
-        ImageColor3 = Library.Scheme.FontColor,
-        Size = UDim2.fromOffset(16, 16),
-        Position = UDim2.new(1, -10, 0.5, 0),
-        BackgroundTransparency = 1,
-        Parent = Display,
-    })
-
-    -- Search Box
-    local SearchBox
-    if Info.Searchable then
-        SearchBox = New("TextBox", {
+        local Holder = New("Frame", {
             BackgroundTransparency = 1,
-            PlaceholderText = "Search...",
-            Position = UDim2.fromOffset(0, 0),
-            Size = UDim2.new(1, -20, 1, 0),
+            Size = UDim2.new(1, 0, 0, Dropdown.Text and 39 or 21),
+            Visible = Dropdown.Visible,
+            Parent = Container,
+        })
+
+        local Label = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 14),
+            Text = Dropdown.Text,
             TextSize = 14,
             TextXAlignment = Enum.TextXAlignment.Left,
-            Visible = false,
+            Visible = not not Info.Text,
+            Parent = Holder,
+        })
+
+        local Display = New("TextButton", {
+            Active = not Dropdown.Disabled,
+            AnchorPoint = Vector2.new(0, 1),
+            BackgroundColor3 = "MainColor",
+            BorderColor3 = "OutlineColor",
+            BorderSizePixel = 1,
+            Position = UDim2.fromScale(0, 1),
+            Size = UDim2.new(1, 0, 0, 21),
+            Text = "---",
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = Holder,
+        })
+
+        New("UIPadding", {
+            PaddingLeft = UDim.new(0, 8),
+            PaddingRight = UDim.new(0, 4),
             Parent = Display,
         })
-        New("UIPadding", { PaddingLeft = UDim.new(0, 10), Parent = SearchBox })
-    end
 
-    -- Context Menu
-    local Menu = Library:AddContextMenu(
-        Display,
-        function() return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, 0) end,
-        function() return { 0.5, Display.AbsoluteSize.Y + 2 } end,
-        2,
-        function(active)
-            Display.TextTransparency = (active and SearchBox) and 1 or 0
-            Arrow.Rotation = active and 180 or 0
-            if SearchBox then SearchBox.Visible = active; SearchBox.Text = "" end
+        local ArrowImage = New("ImageLabel", {
+            AnchorPoint = Vector2.new(1, 0.5),
+            Image = ArrowIcon and ArrowIcon.Url or "",
+            ImageColor3 = "FontColor",
+            ImageRectOffset = ArrowIcon and ArrowIcon.ImageRectOffset or Vector2.zero,
+            ImageRectSize = ArrowIcon and ArrowIcon.ImageRectSize or Vector2.zero,
+            ImageTransparency = 0.5,
+            Position = UDim2.fromScale(1, 0.5),
+            Size = UDim2.fromOffset(16, 16),
+            Parent = Display,
+        })
+
+        local SearchBox
+        if Info.Searchable then
+            SearchBox = New("TextBox", {
+                BackgroundTransparency = 1,
+                PlaceholderText = "Search...",
+                Position = UDim2.fromOffset(-8, 0),
+                Size = UDim2.new(1, -12, 1, 0),
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Visible = false,
+                Parent = Display,
+            })
+            New("UIPadding", {
+                PaddingLeft = UDim.new(0, 8),
+                Parent = SearchBox,
+            })
         end
-    )
-    Dropdown.Menu = Menu
 
-    -- ===== Functions =====
-    function Dropdown:UpdateColors()
-        if Library.Unloaded then return end
-        Label.TextTransparency = Dropdown.Disabled and 0.8 or 0
-        Display.TextTransparency = Dropdown.Disabled and 0.8 or 0
-        Arrow.ImageTransparency = Dropdown.Disabled and 0.8 or Menu.Active and 0 or 0.5
-        Display.BackgroundColor3 = Library.Scheme.MainColor
-    end
-
-    function Dropdown:Display()
-        local text = ""
-        if Info.Multi then
-            for _, val in Dropdown.Values do
-                if Dropdown.Value[val] then
-                    text = text .. tostring(val) .. ", "
+        local MenuTable = Library:AddContextMenu(
+            Display,
+            function()
+                return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, 0)
+            end,
+            function()
+                return { 0.5, Display.AbsoluteSize.Y + 1.5 }
+            end,
+            2,
+            function(Active: boolean)
+                Display.TextTransparency = (Active and SearchBox) and 1 or 0
+                ArrowImage.ImageTransparency = Active and 0 or 0.5
+                ArrowImage.Rotation = Active and 180 or 0
+                if SearchBox then
+                    SearchBox.Text = ""
+                    SearchBox.Visible = Active
                 end
             end
-            text = text:sub(1, #text - 2)
-        else
-            text = Dropdown.Value or "---"
+        )
+        Dropdown.Menu = MenuTable
+
+        function Dropdown:RecalculateListSize(Count)
+            local Y = math.clamp((Count or GetTableSize(Dropdown.Values)) * 21, 0, Info.MaxVisibleDropdownItems * 21)
+
+            MenuTable:SetSize(function()
+                return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, Y)
+            end)
         end
-        Display.Text = text == "" and "---" or text
-    end
 
-    function Dropdown:OnChanged(func)
-        Dropdown.Changed = func
-    end
+        function Dropdown:UpdateColors()
+            if Library.Unloaded then
+                return
+            end
 
-    -- Build menu buttons
-    local Buttons = {}
-    function Dropdown:BuildDropdownList()
-        for btn, _ in Buttons do btn:Destroy() end
-        table.clear(Buttons)
-        local count = 0
-        for _, val in Dropdown.Values do
-            if SearchBox and not tostring(val):lower():match(SearchBox.Text:lower()) then continue end
-            count += 1
-            local isDisabled = table.find(Dropdown.DisabledValues, val)
+            Label.TextTransparency = Dropdown.Disabled and 0.8 or 0
+            Display.TextTransparency = Dropdown.Disabled and 0.8 or 0
+            ArrowImage.ImageTransparency = Dropdown.Disabled and 0.8 or MenuTable.Active and 0 or 0.5
+        end
 
-            local Btn = New("TextButton", {
-                BackgroundColor3 = Library.Scheme.MainColor,
-                BackgroundTransparency = isDisabled and 0.8 or 0,
-                Text = tostring(val),
-                TextSize = 14,
-                TextColor3 = Library.Scheme.FontColor,
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Size = UDim2.new(1, 0, 0, 24),
-                Parent = Menu.Menu,
-            })
-            New("UICorner", { CornerRadius = UDim.new(0, 6), Parent = Btn })
-            New("UIPadding", { PaddingLeft = UDim.new(0, 10), Parent = Btn })
+        function Dropdown:Display()
+            if Library.Unloaded then
+                return
+            end
 
-            Btn.MouseEnter:Connect(function()
-                Btn.BackgroundColor3 = Library.Scheme.AccentColor
-            end)
-            Btn.MouseLeave:Connect(function()
-                Btn.BackgroundColor3 = Library.Scheme.MainColor
-            end)
+            local Str = ""
 
-            Btn.MouseButton1Click:Connect(function()
-                if Info.Multi then
-                    Dropdown.Value[val] = not Dropdown.Value[val]
-                else
-                    Dropdown.Value = val
-                    Menu:Close()
+            if Info.Multi then
+                for _, Value in Dropdown.Values do
+                    if Dropdown.Value[Value] then
+                        Str = Str
+                            .. (Info.FormatDisplayValue and tostring(Info.FormatDisplayValue(Value)) or tostring(Value))
+                            .. ", "
+                    end
                 end
+
+                Str = Str:sub(1, #Str - 2)
+            else
+                Str = Dropdown.Value and tostring(Dropdown.Value) or ""
+                if Str ~= "" and Info.FormatDisplayValue then
+                    Str = tostring(Info.FormatDisplayValue(Str))
+                end
+            end
+
+            if #Str > 25 then
+                Str = Str:sub(1, 22) .. "..."
+            end
+
+            Display.Text = (Str == "" and "---" or Str)
+        end
+
+        function Dropdown:OnChanged(Func)
+            Dropdown.Changed = Func
+        end
+
+        function Dropdown:GetActiveValues()
+            if Info.Multi then
+                local Table = {}
+
+                for Value, _ in Dropdown.Value do
+                    table.insert(Table, Value)
+                end
+
+                return Table
+            end
+
+            return Dropdown.Value and 1 or 0
+        end
+
+        local Buttons = {}
+        function Dropdown:BuildDropdownList()
+            local Values = Dropdown.Values
+            local DisabledValues = Dropdown.DisabledValues
+
+            for Button, _ in Buttons do
+                Button:Destroy()
+            end
+            table.clear(Buttons)
+
+            local Count = 0
+            for _, Value in Values do
+                if SearchBox and not tostring(Value):lower():match(SearchBox.Text:lower()) then
+                    continue
+                end
+
+                Count += 1
+                local IsDisabled = table.find(DisabledValues, Value)
+                local Table = {}
+
+                local Button = New("TextButton", {
+                    BackgroundColor3 = "MainColor",
+                    BackgroundTransparency = 1,
+                    LayoutOrder = IsDisabled and 1 or 0,
+                    Size = UDim2.new(1, 0, 0, 21),
+                    Text = tostring(Value),
+                    TextSize = 14,
+                    TextTransparency = 0.5,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = MenuTable.Menu,
+                })
+                New("UIPadding", {
+                    PaddingLeft = UDim.new(0, 7),
+                    PaddingRight = UDim.new(0, 7),
+                    Parent = Button,
+                })
+
+                local Selected
+                if Info.Multi then
+                    Selected = Dropdown.Value[Value]
+                else
+                    Selected = Dropdown.Value == Value
+                end
+
+                function Table:UpdateButton()
+                    if Info.Multi then
+                        Selected = Dropdown.Value[Value]
+                    else
+                        Selected = Dropdown.Value == Value
+                    end
+
+                    Button.BackgroundTransparency = Selected and 0 or 1
+                    Button.TextTransparency = IsDisabled and 0.8 or Selected and 0 or 0.5
+                end
+
+                if not IsDisabled then
+                    Button.MouseButton1Click:Connect(function()
+                        local Try = not Selected
+
+                        if not (Dropdown:GetActiveValues() == 1 and not Try and not Info.AllowNull) then
+                            Selected = Try
+                            if Info.Multi then
+                                Dropdown.Value[Value] = Selected and true or nil
+                            else
+                                Dropdown.Value = Selected and Value or nil
+                            end
+
+                            for _, OtherButton in Buttons do
+                                OtherButton:UpdateButton()
+                            end
+                        end
+
+                        Table:UpdateButton()
+                        Dropdown:Display()
+
+                        Library:UpdateDependencyBoxes()
+                        Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
+                        Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
+                    end)
+                end
+
+                Table:UpdateButton()
                 Dropdown:Display()
+
+                Buttons[Button] = Table
+            end
+
+            Dropdown:RecalculateListSize(Count)
+        end
+
+        function Dropdown:SetValue(Value)
+            if Info.Multi then
+                local Table = {}
+
+                for Val, Active in Value or {} do
+                    if typeof(Active) ~= "boolean" then
+                        Table[Active] = true
+                    elseif Active and table.find(Dropdown.Values, Val) then
+                        Table[Val] = true
+                    end
+                end
+
+                Dropdown.Value = Table
+            else
+                if table.find(Dropdown.Values, Value) then
+                    Dropdown.Value = Value
+                elseif not Value then
+                    Dropdown.Value = nil
+                end
+            end
+
+            Dropdown:Display()
+            for _, Button in Buttons do
+                Button:UpdateButton()
+            end
+
+            if not Dropdown.Disabled then
+                Library:UpdateDependencyBoxes()
                 Library:SafeCallback(Dropdown.Callback, Dropdown.Value)
                 Library:SafeCallback(Dropdown.Changed, Dropdown.Value)
-            end)
-
-            Buttons[Btn] = true
+            end
         end
-        local height = math.clamp(count * 24, 0, Info.MaxVisibleDropdownItems * 24)
-        Menu:SetSize(function() return UDim2.fromOffset(Display.AbsoluteSize.X / Library.DPIScale, height) end)
-    end
 
-    function Dropdown:SetValue(value)
-        Dropdown.Value = value
+        function Dropdown:SetValues(Values)
+            Dropdown.Values = Values
+            Dropdown:BuildDropdownList()
+        end
+
+        function Dropdown:AddValues(Values)
+            if typeof(Values) == "table" then
+                for _, val in Values do
+                    table.insert(Dropdown.Values, val)
+                end
+            elseif typeof(Values) == "string" then
+                table.insert(Dropdown.Values, Values)
+            else
+                return
+            end
+
+            Dropdown:BuildDropdownList()
+        end
+
+        function Dropdown:SetDisabledValues(DisabledValues)
+            Dropdown.DisabledValues = DisabledValues
+            Dropdown:BuildDropdownList()
+        end
+
+        function Dropdown:AddDisabledValues(DisabledValues)
+            if typeof(DisabledValues) == "table" then
+                for _, val in DisabledValues do
+                    table.insert(Dropdown.DisabledValues, val)
+                end
+            elseif typeof(DisabledValues) == "string" then
+                table.insert(Dropdown.DisabledValues, DisabledValues)
+            else
+                return
+            end
+
+            Dropdown:BuildDropdownList()
+        end
+
+        function Dropdown:SetDisabled(Disabled: boolean)
+            Dropdown.Disabled = Disabled
+
+            if Dropdown.TooltipTable then
+                Dropdown.TooltipTable.Disabled = Dropdown.Disabled
+            end
+
+            MenuTable:Close()
+            Display.Active = not Dropdown.Disabled
+            Dropdown:UpdateColors()
+        end
+
+        function Dropdown:SetVisible(Visible: boolean)
+            Dropdown.Visible = Visible
+
+            Holder.Visible = Dropdown.Visible
+            Groupbox:Resize()
+        end
+
+        function Dropdown:SetText(Text: string)
+            Dropdown.Text = Text
+            Holder.Size = UDim2.new(1, 0, 0, Text and 39 or 21)
+
+            Label.Text = Text and Text or ""
+            Label.Visible = not not Text
+        end
+
+        Display.MouseButton1Click:Connect(function()
+            if Dropdown.Disabled then
+                return
+            end
+
+            MenuTable:Toggle()
+        end)
+
+        if SearchBox then
+            SearchBox:GetPropertyChangedSignal("Text"):Connect(Dropdown.BuildDropdownList)
+        end
+
+        local Defaults = {}
+        if typeof(Info.Default) == "string" then
+            local Index = table.find(Dropdown.Values, Info.Default)
+            if Index then
+                table.insert(Defaults, Index)
+            end
+        elseif typeof(Info.Default) == "table" then
+            for _, Value in next, Info.Default do
+                local Index = table.find(Dropdown.Values, Value)
+                if Index then
+                    table.insert(Defaults, Index)
+                end
+            end
+        elseif Dropdown.Values[Info.Default] ~= nil then
+            table.insert(Defaults, Info.Default)
+        end
+
+        if next(Defaults) then
+            for i = 1, #Defaults do
+                local Index = Defaults[i]
+                if Info.Multi then
+                    Dropdown.Value[Dropdown.Values[Index]] = true
+                else
+                    Dropdown.Value = Dropdown.Values[Index]
+                end
+
+                if not Info.Multi then
+                    break
+                end
+            end
+        end
+
+        if typeof(Dropdown.Tooltip) == "string" or typeof(Dropdown.DisabledTooltip) == "string" then
+            Dropdown.TooltipTable = Library:AddTooltip(Dropdown.Tooltip, Dropdown.DisabledTooltip, Display)
+            Dropdown.TooltipTable.Disabled = Dropdown.Disabled
+        end
+
+        Dropdown:UpdateColors()
         Dropdown:Display()
         Dropdown:BuildDropdownList()
+        Groupbox:Resize()
+
+        Dropdown.Holder = Holder
+        table.insert(Groupbox.Elements, Dropdown)
+
+        Dropdown.Default = Defaults
+        Dropdown.DefaultValues = Dropdown.Values
+
+        Options[Idx] = Dropdown
+
+        return Dropdown
     end
-
-    function Dropdown:SetDisabled(bool)
-        Dropdown.Disabled = bool
-        Display.Active = not bool
-        Dropdown:UpdateColors()
-        Menu:Close()
-    end
-
-    Display.MouseButton1Click:Connect(function()
-        if not Dropdown.Disabled then
-            Menu:Toggle()
-        end
-    end)
-
-    if SearchBox then
-        SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-            Dropdown:BuildDropdownList()
-        end)
-    end
-
-    Dropdown:UpdateColors()
-    Dropdown:Display()
-    Dropdown:BuildDropdownList()
-    Groupbox:Resize()
-
-    Dropdown.Holder = Holder
-    table.insert(Groupbox.Elements, Dropdown)
-    Options[Idx] = Dropdown
-    return Dropdown
-end
 
     function Funcs:AddViewport(Idx, Info)
         Info = Library:Validate(Info, Templates.Viewport)
