@@ -3796,39 +3796,39 @@ do
     })
 
     -- ====== Circle-style toggle (Ring + Dot) ======
-    local Ring = New("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundColor3 = "MainColor",
-        Position = UDim2.new(1, 0, 0.5, 0),
-        Size = UDim2.fromOffset(18, 18),
-        Parent = Button,
-    })
-    Library.Registry[Ring] = {}
+   -- ====== Circle-style toggle (Ring + Dot) ======
+local Ring = New("Frame", {
+    AnchorPoint = Vector2.new(1, 0.5),
+    BackgroundColor3 = Library.Scheme.MainColor,
+    Position = UDim2.new(1, 0, 0.5, 0),
+    Size = UDim2.fromOffset(18, 18),
+    Parent = Button,
+})
+Library.Registry[Ring] = {}
 
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Ring,
-    })
+New("UICorner", {
+    CornerRadius = UDim.new(1, 0),
+    Parent = Ring,
+})
 
-    local RingStroke = New("UIStroke", {
-        Color = "OutlineColor",
-        Parent = Ring,
-    })
-    Library.Registry[RingStroke] = {}
+local RingStroke = New("UIStroke", {
+    Color = Library.Scheme.OutlineColor,
+    Parent = Ring,
+})
+Library.Registry[RingStroke] = {}
 
-    local Dot = New("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = "AccentColor",
-        BackgroundTransparency = 1,
-        Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromOffset(0, 0),
-        Parent = Ring,
-    })
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Dot,
-    })
-    -- ====== End Circle toggle ======
+local Dot = New("Frame", {
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    BackgroundColor3 = Library.Scheme.AccentColor,
+    BackgroundTransparency = 1,
+    Position = UDim2.fromScale(0.5, 0.5),
+    Size = UDim2.fromOffset(0, 0),
+    Parent = Ring,
+})
+New("UICorner", {
+    CornerRadius = UDim.new(1, 0),
+    Parent = Dot,
+})
 
     function Toggle:UpdateColors()
         Toggle:Display()
