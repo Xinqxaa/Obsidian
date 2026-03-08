@@ -6080,35 +6080,6 @@ function Library:CreateWindow(WindowInfo)
             Size = UDim2.new(1, 0, 0, 1),
         })
 
-        -- Glow layers behind MainFrame
-        local glowColors = {
-            { offset = 28, transparency = 0.96 },
-            { offset = 18, transparency = 0.91 },
-            { offset = 10, transparency = 0.84 },
-            { offset = 4,  transparency = 0.72 },
-        }
-        for _, g in ipairs(glowColors) do
-            local glow = Instance.new("Frame")
-            glow.BackgroundColor3 = Color3.fromRGB(180, 0, 255)
-            glow.BorderSizePixel = 0
-            glow.AnchorPoint = Vector2.new(0.5, 0.5)
-            glow.Position = UDim2.fromScale(0.5, 0.5)
-            glow.Size = UDim2.new(1, g.offset, 1, g.offset)
-            glow.BackgroundTransparency = g.transparency
-            glow.ZIndex = MainFrame.ZIndex - 1
-            Instance.new("UICorner", glow).CornerRadius = UDim.new(0, WindowInfo.CornerRadius + 6)
-            glow.Parent = MainFrame.Parent
-            Library:GiveSignal(MainFrame:GetPropertyChangedSignal("Position"):Connect(function()
-                glow.Position = UDim2.fromScale(0.5, 0.5)
-            end))
-            Library:GiveSignal(MainFrame:GetPropertyChangedSignal("Size"):Connect(function()
-                glow.Size = UDim2.new(1, g.offset, 1, g.offset)
-            end))
-            Library:GiveSignal(MainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
-                glow.Visible = MainFrame.Visible
-            end))
-        end
-
         DividerLine = New("Frame", {
             BackgroundColor3 = "OutlineColor",
             Position = UDim2.fromOffset(InitialLeftWidth, 0),
