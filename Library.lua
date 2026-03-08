@@ -3871,7 +3871,7 @@ function Funcs:AddToggle(Idx, Info)
         }):Play()
     end
 
-    -- ====== Keep all other original toggle logic (SetValue, SetDisabled, etc.) ======
+    -- ====== Original toggle logic ======
     function Toggle:SetValue(Value)
         if Toggle.Disabled then return end
         Toggle.Value = Value
@@ -3903,6 +3903,11 @@ function Funcs:AddToggle(Idx, Info)
         Label.Text = Text
     end
 
+    -- ====== Add OnChanged support ======
+    function Toggle:OnChanged(Func)
+        Toggle.Changed = Func
+    end
+
     Button.MouseButton1Click:Connect(function()
         if not Toggle.Disabled then
             Toggle:SetValue(not Toggle.Value)
@@ -3930,7 +3935,6 @@ function Funcs:AddToggle(Idx, Info)
 
     return Toggle
 end
-
     function Funcs:AddInput(Idx, Info)
         Info = Library:Validate(Info, Templates.Input)
 
