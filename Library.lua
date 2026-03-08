@@ -3740,7 +3740,7 @@ do
         return Toggle
     end
 
- function Funcs:AddToggle(Idx, Info)
+function Funcs:AddToggle(Idx, Info)
     if Library.ForceCheckbox then
         return Funcs.AddCheckbox(self, Idx, Info)
     end
