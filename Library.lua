@@ -1188,29 +1188,77 @@ do
     })
 end
 
---// Notification
+--// Notification Area
 local NotificationArea
 local NotificationList
 do
     NotificationArea = New("Frame", {
         AnchorPoint = Vector2.new(1, 0),
         BackgroundTransparency = 1,
-        Position = UDim2.new(1, -6, 0, 6),
-        Size = UDim2.new(0, 300, 1, -6),
+        Position = UDim2.new(1, -12, 0, 12), -- slightly inset for premium feel
+        Size = UDim2.new(0, 320, 1, -24),
         Parent = ScreenGui,
+        ZIndex = 50, -- make sure it overlays UI
     })
-    table.insert(
-        Library.Scales,
-        New("UIScale", {
-            Parent = NotificationArea,
-        })
-    )
+    
+    -- Add a subtle scale for DPI adjustments
+    table.insert(Library.Scales, New("UIScale", { Parent = NotificationArea, Scale = 1 }))
 
+    -- Vertical list of notifications, smooth spacing
     NotificationList = New("UIListLayout", {
         HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        Padding = UDim.new(0, 8),
+        VerticalAlignment = Enum.VerticalAlignment.Top,
+        Padding = UDim.new(0, 10), -- more spacing for premium look
+        SortOrder = Enum.SortOrder.LayoutOrder,
         Parent = NotificationArea,
     })
+
+    -- Optional: Add UIStroke for subtle outlines around each notification
+    local function CreateNotification(Text, Duration)
+        Duration = Duration or 3
+        local NotifyFrame = New("Frame", {
+            Size = UDim2.new(1, -8, 0, 48),
+            BackgroundColor3 = Library.Scheme.MainColor,
+            BorderSizePixel = 0,
+            Parent = NotificationArea,
+        })
+        New("UICorner", { CornerRadius = UDim.new(0, 12), Parent = NotifyFrame })
+        New("UIStroke", { Color = Library.Scheme.OutlineColor, Thickness = 1, Transparency = 0.6, Parent = NotifyFrame })
+
+        local Label = New("TextLabel", {
+            Size = UDim2.new(1, -16, 1, -16),
+            Position = UDim2.new(0, 8, 0, 8),
+            BackgroundTransparency = 1,
+            Text = Text,
+            TextColor3 = Library.Scheme.FontColor,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Center,
+            Parent = NotifyFrame,
+        })
+
+        -- Fade in animation
+        NotifyFrame.Position = UDim2.new(1, 400, 0, NotifyFrame.Position.Y.Offset)
+        TweenService:Create(
+            NotifyFrame,
+            TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            { Position = UDim2.new(1, -6, NotifyFrame.Position.Y.Scale, NotifyFrame.Position.Y.Offset) }
+        ):Play()
+
+        -- Auto remove after duration
+        task.spawn(function()
+            task.wait(Duration)
+            TweenService:Create(
+                NotifyFrame,
+                TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+                { Position = UDim2.new(1, 400, NotifyFrame.Position.Y.Scale, NotifyFrame.Position.Y.Offset), Transparency = 1 }
+            ):Play()
+            task.wait(0.3)
+            NotifyFrame:Destroy()
+        end)
+    end
+
+    Library.Notify = CreateNotification -- overwrite for convenience
 end
 
 --// Lib Functions \\--
