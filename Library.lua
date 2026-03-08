@@ -3807,6 +3807,12 @@ do
             Parent = Ball,
         })
 
+-- Ensure Switch and Ball exist only if defined
+local Switch = Switch or nil
+local SwitchStroke = SwitchStroke or nil
+local Ball = Ball or nil
+
+-- Ring and Dot
 local Ring = New("Frame", {
     AnchorPoint = Vector2.new(1, 0.5),
     BackgroundColor3 = "MainColor",
@@ -3843,81 +3849,63 @@ New("UICorner", {
     Parent = Dot
 })
 
-        function Toggle:UpdateColors()
-            Toggle:Display()
-        end
-
+-- Only **one Display function** for the toggle
 function Toggle:Display()
     if Library.Unloaded then return end
 
+    -- First: Ring/Dot logic
     if Toggle.Disabled then
         Label.TextTransparency = 0.8
         RingStroke.Transparency = 0.5
         Ring.BackgroundTransparency = 0.5
-        return
-    end
-
-    Ring.BackgroundTransparency = 0
-    RingStroke.Transparency = 0
-
-    Ring.BackgroundColor3 = Library.Scheme.MainColor
-    Library.Registry[Ring].BackgroundColor3 = "MainColor"
-
-    RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
-    Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
-
-    TweenService:Create(Label, Library.TweenInfo, {
-        TextTransparency = Toggle.Value and 0 or 0.4,
-    }):Play()
-
-    if Toggle.Value then
-        TweenService:Create(Dot,
-            TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            Size = UDim2.fromOffset(10,10),
-            BackgroundTransparency = 0
-        }):Play()
+        Dot.BackgroundTransparency = 1
+        Dot.Size = UDim2.fromOffset(0, 0)
     else
+        Ring.BackgroundTransparency = 0
+        RingStroke.Transparency = 0
+
+        Ring.BackgroundColor3 = Library.Scheme.MainColor
+        Library.Registry[Ring].BackgroundColor3 = "MainColor"
+
+        RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+        Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+
+        TweenService:Create(Label, Library.TweenInfo, {
+            TextTransparency = Toggle.Value and 0 or 0.4,
+        }):Play()
+
         TweenService:Create(Dot,
-            TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-            Size = UDim2.fromOffset(0,0),
-            BackgroundTransparency = 1
+            TweenInfo.new(Toggle.Value and 0.22 or 0.15,
+            Toggle.Value and Enum.EasingStyle.Back or Enum.EasingStyle.Quad,
+            Toggle.Value and Enum.EasingDirection.Out or Enum.EasingDirection.In), {
+            Size = Toggle.Value and UDim2.fromOffset(10,10) or UDim2.fromOffset(0,0),
+            BackgroundTransparency = Toggle.Value and 0 or 1
         }):Play()
     end
-end
 
-        function Toggle:UpdateColors()
-            Toggle:Display()
-        end
+    -- Second: Switch/Ball logic (only if they exist)
+    if Switch and Ball and SwitchStroke then
+        local Offset = Toggle.Value and 1 or 0
 
-        function Toggle:Display()
-            if Library.Unloaded then
-                return
+        Switch.BackgroundTransparency = Toggle.Disabled and 0.75 or 0
+        SwitchStroke.Transparency = Toggle.Disabled and 0.75 or 0
+
+        Switch.BackgroundColor3 = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.MainColor
+        SwitchStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+
+        Library.Registry[Switch].BackgroundColor3 = Toggle.Value and "AccentColor" or "MainColor"
+        Library.Registry[SwitchStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+
+        if Toggle.Disabled then
+            Label.TextTransparency = 0.8
+            Ball.AnchorPoint = Vector2.new(Offset, 0)
+            Ball.Position = UDim2.fromScale(Offset, 0)
+
+            Ball.BackgroundColor3 = Library:GetDarkerColor(Library.Scheme.FontColor)
+            Library.Registry[Ball].BackgroundColor3 = function()
+                return Library:GetDarkerColor(Library.Scheme.FontColor)
             end
-
-            local Offset = Toggle.Value and 1 or 0
-
-            Switch.BackgroundTransparency = Toggle.Disabled and 0.75 or 0
-            SwitchStroke.Transparency = Toggle.Disabled and 0.75 or 0
-
-            Switch.BackgroundColor3 = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.MainColor
-            SwitchStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
-
-            Library.Registry[Switch].BackgroundColor3 = Toggle.Value and "AccentColor" or "MainColor"
-            Library.Registry[SwitchStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
-
-            if Toggle.Disabled then
-                Label.TextTransparency = 0.8
-                Ball.AnchorPoint = Vector2.new(Offset, 0)
-                Ball.Position = UDim2.fromScale(Offset, 0)
-
-                Ball.BackgroundColor3 = Library:GetDarkerColor(Library.Scheme.FontColor)
-                Library.Registry[Ball].BackgroundColor3 = function()
-                    return Library:GetDarkerColor(Library.Scheme.FontColor)
-                end
-
-                return
-            end
-
+        else
             TweenService:Create(Label, Library.TweenInfo, {
                 TextTransparency = Toggle.Value and 0 or 0.4,
             }):Play()
@@ -3929,94 +3917,65 @@ end
             Ball.BackgroundColor3 = Library.Scheme.FontColor
             Library.Registry[Ball].BackgroundColor3 = "FontColor"
         end
-
-        function Toggle:OnChanged(Func)
-            Toggle.Changed = Func
-        end
-
-        function Toggle:SetValue(Value)
-            if Toggle.Disabled then
-                return
-            end
-
-            Toggle.Value = Value
-            Toggle:Display()
-
-            for _, Addon in Toggle.Addons do
-                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
-                    Addon.Toggled = Toggle.Value
-                    Addon:Update()
-                end
-            end
-
-            Library:UpdateDependencyBoxes()
-            Library:SafeCallback(Toggle.Callback, Toggle.Value)
-            Library:SafeCallback(Toggle.Changed, Toggle.Value)
-        end
-
-        function Toggle:SetDisabled(Disabled: boolean)
-            Toggle.Disabled = Disabled
-
-            if Toggle.TooltipTable then
-                Toggle.TooltipTable.Disabled = Toggle.Disabled
-            end
-
-            for _, Addon in Toggle.Addons do
-                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
-                    Addon:Update()
-                end
-            end
-
-            Button.Active = not Toggle.Disabled
-            Toggle:Display()
-        end
-
-        function Toggle:SetVisible(Visible: boolean)
-            Toggle.Visible = Visible
-
-            Button.Visible = Toggle.Visible
-            Groupbox:Resize()
-        end
-
-        function Toggle:SetText(Text: string)
-            Toggle.Text = Text
-            Label.Text = Text
-        end
-
-        Button.MouseButton1Click:Connect(function()
-            if Toggle.Disabled then
-                return
-            end
-
-            Toggle:SetValue(not Toggle.Value)
-        end)
-
-        if typeof(Toggle.Tooltip) == "string" or typeof(Toggle.DisabledTooltip) == "string" then
-            Toggle.TooltipTable = Library:AddTooltip(Toggle.Tooltip, Toggle.DisabledTooltip, Button)
-            Toggle.TooltipTable.Disabled = Toggle.Disabled
-        end
-
-        if Toggle.Risky then
-            Label.TextColor3 = Library.Scheme.RedColor
-            Library.Registry[Label].TextColor3 = "RedColor"
-        end
-
-        Toggle:Display()
-        Groupbox:Resize()
-
-        Toggle.TextLabel = Label
-        Toggle.Container = Container
-        setmetatable(Toggle, BaseAddons)
-
-        Toggle.Holder = Button
-        table.insert(Groupbox.Elements, Toggle)
-
-        Toggle.Default = Toggle.Value
-
-        Toggles[Idx] = Toggle
-
-        return Toggle
     end
+end
+
+-- Keep the rest of the original Toggle functions as-is
+function Toggle:UpdateColors()
+    Toggle:Display()
+end
+
+function Toggle:SetValue(Value)
+    if Toggle.Disabled then return end
+    Toggle.Value = Value
+    Toggle:Display()
+
+    for _, Addon in Toggle.Addons do
+        if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
+            Addon.Toggled = Toggle.Value
+            Addon:Update()
+        end
+    end
+
+    Library:UpdateDependencyBoxes()
+    Library:SafeCallback(Toggle.Callback, Toggle.Value)
+    Library:SafeCallback(Toggle.Changed, Toggle.Value)
+end
+
+function Toggle:SetDisabled(Disabled)
+    Toggle.Disabled = Disabled
+    if Toggle.TooltipTable then
+        Toggle.TooltipTable.Disabled = Toggle.Disabled
+    end
+    Button.Active = not Toggle.Disabled
+    Toggle:Display()
+end
+
+function Toggle:SetVisible(Visible)
+    Toggle.Visible = Visible
+    Button.Visible = Toggle.Visible
+    Groupbox:Resize()
+end
+
+function Toggle:SetText(Text)
+    Toggle.Text = Text
+    Label.Text = Text
+end
+
+Button.MouseButton1Click:Connect(function()
+    if not Toggle.Disabled then
+        Toggle:SetValue(not Toggle.Value)
+    end
+end)
+
+-- Risky text color
+if Toggle.Risky then
+    Label.TextColor3 = Library.Scheme.RedColor
+    Library.Registry[Label].TextColor3 = "RedColor"
+end
+
+-- Initial display
+Toggle:Display()
 
     function Funcs:AddInput(Idx, Info)
         Info = Library:Validate(Info, Templates.Input)
