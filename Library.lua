@@ -6106,109 +6106,61 @@ function Library:CreateWindow(WindowInfo)
         })
 
 --// Footer
-local FooterLabel = New("TextLabel", {
+New("TextLabel", {
     BackgroundTransparency = 1,
-    Size = UDim2.new(1, -16, 1, 0), -- Slight padding
-    Position = UDim2.fromOffset(8, 0),
-    Text = WindowInfo.Footer or "",
+    Size = UDim2.fromScale(1, 1),
+    Text = WindowInfo.Footer,
     TextSize = 14,
-    TextColor3 = Color3.fromRGB(200, 200, 200),
-    TextTransparency = 0.4,
-    Font = Enum.Font.Gotham,
-    TextXAlignment = Enum.TextXAlignment.Left,
+    TextTransparency = 0.5,
     Parent = BottomBar,
 })
 
--- Optional: Add subtle shadow/glow under footer text
-local FooterStroke = Instance.new("UIStroke")
-FooterStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-FooterStroke.Color = Color3.fromRGB(50,50,50)
-FooterStroke.Transparency = 0.6
-FooterStroke.Thickness = 1
-FooterStroke.Parent = FooterLabel
-
---// Resize Button (premium style)
+--// Resize Button
 if WindowInfo.Resizable then
     ResizeButton = New("TextButton", {
         AnchorPoint = Vector2.new(1, 0),
-        BackgroundColor3 = Color3.fromRGB(30, 30, 30),
-        BackgroundTransparency = 0,
-        Position = UDim2.new(1, -WindowInfo.CornerRadius / 2, 0, 0),
-        Size = UDim2.fromOffset(20, 20),
+        BackgroundTransparency = 1,
+        Position = UDim2.new(1, -WindowInfo.CornerRadius / 4, 0, 0),
+        Size = UDim2.fromScale(1, 1),
+        SizeConstraint = Enum.SizeConstraint.RelativeYY,
         Text = "",
-        AutoButtonColor = false,
         Parent = BottomBar,
     })
-
-    -- Rounded corners
-    local ResizeCorner = Instance.new("UICorner")
-    ResizeCorner.CornerRadius = UDim.new(0, 6)
-    ResizeCorner.Parent = ResizeButton
-
-    -- Hover effect
-    ResizeButton.MouseEnter:Connect(function()
-        ResizeButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
-    end)
-    ResizeButton.MouseLeave:Connect(function()
-        ResizeButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    end)
 
     Library:MakeResizable(MainFrame, ResizeButton, function()
         for _, Tab in Library.Tabs do
             Tab:Resize(true)
         end
     end)
-
-    New("ImageLabel", {
-        Image = ResizeIcon and ResizeIcon.Url or "",
-        ImageColor3 = Color3.fromRGB(200, 200, 200),
-        ImageRectOffset = ResizeIcon and ResizeIcon.ImageRectOffset or Vector2.zero,
-        ImageRectSize = ResizeIcon and ResizeIcon.ImageRectSize or Vector2.zero,
-        ImageTransparency = 0.2,
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromOffset(12, 12),
-        Parent = ResizeButton,
-    })
 end
 
---// Tabs (premium scrolling list)
+--// Resize Icon
+New("ImageLabel", {
+    Image = ResizeIcon and ResizeIcon.Url or "",
+    ImageColor3 = "FontColor",
+    ImageRectOffset = ResizeIcon and ResizeIcon.ImageRectOffset or Vector2.zero,
+    ImageRectSize = ResizeIcon and ResizeIcon.ImageRectSize or Vector2.zero,
+    ImageTransparency = 0.5,
+    Position = UDim2.fromOffset(2, 2),
+    Size = UDim2.new(1, -4, 1, -4),
+    Parent = ResizeButton,
+})
+
+--// Tabs \\--
 Tabs = New("ScrollingFrame", {
     AutomaticCanvasSize = Enum.AutomaticSize.Y,
-    BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+    BackgroundColor3 = "BackgroundColor",
     CanvasSize = UDim2.fromScale(0, 0),
     Position = UDim2.fromOffset(0, 49),
-    ScrollBarThickness = 6,
+    ScrollBarThickness = 0,
     Size = UDim2.new(0, InitialLeftWidth, 1, -70),
     Parent = MainFrame,
 })
 
--- Rounded corners and subtle shadow
-local TabsCorner = Instance.new("UICorner")
-TabsCorner.CornerRadius = UDim.new(0, 10)
-TabsCorner.Parent = Tabs
-
-local TabsStroke = Instance.new("UIStroke")
-TabsStroke.Color = Color3.fromRGB(50, 50, 50)
-TabsStroke.Transparency = 0.5
-TabsStroke.Thickness = 1
-TabsStroke.Parent = Tabs
-
-local TabsLayout = New("UIListLayout", {
+--// Tabs Layout
+New("UIListLayout", {
     Parent = Tabs,
-    SortOrder = Enum.SortOrder.LayoutOrder,
-    Padding = UDim.new(0, 6),
 })
-
--- Optional: Add subtle gradient for the scroll area
-local TabsGradient = Instance.new("UIGradient")
-TabsGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(25,25,25)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(40,40,40))
-})
-TabsGradient.Rotation = 90
-TabsGradient.Parent = Tabs
-
         --// Container \\--
         Container = New("Frame", {
             AnchorPoint = Vector2.new(1, 0),
