@@ -3740,7 +3740,7 @@ do
         return Toggle
     end
 
-function Funcs:AddToggle(Idx, Info)
+    function Funcs:AddToggle(Idx, Info)
         if Library.ForceCheckbox then
             return Funcs.AddCheckbox(self, Idx, Info)
         end
@@ -3753,15 +3753,19 @@ function Funcs:AddToggle(Idx, Info)
         local Toggle = {
             Text = Info.Text,
             Value = Info.Default,
+
             Tooltip = Info.Tooltip,
             DisabledTooltip = Info.DisabledTooltip,
             TooltipTable = nil,
+
             Callback = Info.Callback,
             Changed = Info.Changed,
+
             Risky = Info.Risky,
             Disabled = Info.Disabled,
             Visible = Info.Visible,
             Addons = {},
+
             Type = "Toggle",
         }
 
@@ -3776,7 +3780,7 @@ function Funcs:AddToggle(Idx, Info)
 
         local Label = New("TextLabel", {
             BackgroundTransparency = 1,
-            Size = UDim2.new(1, -26, 1, 0),
+            Size = UDim2.new(1, -40, 1, 0),
             Text = Toggle.Text,
             TextSize = 14,
             TextTransparency = 0.4,
@@ -3784,173 +3788,6 @@ function Funcs:AddToggle(Idx, Info)
             Parent = Button,
         })
 
-        New("UIListLayout", {
-            FillDirection = Enum.FillDirection.Horizontal,
-            HorizontalAlignment = Enum.HorizontalAlignment.Right,
-            Padding = UDim.new(0, 6),
-            Parent = Label,
-        })
-
-        local Ring = New("Frame", {
-            AnchorPoint = Vector2.new(1, 0.5),
-            BackgroundColor3 = "MainColor",
-            Position = UDim2.new(1, 0, 0.5, 0),
-            Size = UDim2.fromOffset(18, 18),
-            Parent = Button,
-        })
-        New("UICorner", {
-            CornerRadius = UDim.new(1, 0),
-            Parent = Ring,
-        })
-        local RingStroke = New("UIStroke", {
-            Color = "OutlineColor",
-            Thickness = 1.5,
-            Parent = Ring,
-        })
-
-        local Dot = New("Frame", {
-            AnchorPoint = Vector2.new(0.5, 0.5),
-            BackgroundColor3 = "AccentColor",
-            BackgroundTransparency = 1,
-            Position = UDim2.fromScale(0.5, 0.5),
-            Size = UDim2.fromOffset(0, 0),
-            Parent = Ring,
-        })
-        New("UICorner", {
-            CornerRadius = UDim.new(1, 0),
-            Parent = Dot,
-        })
-
-        function Toggle:UpdateColors()
-            Toggle:Display()
-        end
-
-        function Toggle:Display()
-            if Library.Unloaded then return end
-
-            Library.Registry[Ring] = Library.Registry[Ring] or {}
-            Library.Registry[RingStroke] = Library.Registry[RingStroke] or {}
-            Library.Registry[Dot] = Library.Registry[Dot] or {}
-
-            if Toggle.Disabled then
-                Label.TextTransparency = 0.8
-                RingStroke.Transparency = 0.5
-                Ring.BackgroundColor3 = Library.Scheme.BackgroundColor
-                Library.Registry[Ring].BackgroundColor3 = "BackgroundColor"
-                return
-            end
-
-            Ring.BackgroundColor3 = Library.Scheme.MainColor
-            Library.Registry[Ring].BackgroundColor3 = "MainColor"
-            RingStroke.Transparency = 0
-
-            TweenService:Create(Label, Library.TweenInfo, {
-                TextTransparency = Toggle.Value and 0 or 0.4,
-            }):Play()
-
-            TweenService:Create(RingStroke,
-                TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor,
-            }):Play()
-            RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
-            Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
-
-            if Toggle.Value then
-                TweenService:Create(Dot,
-                    TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                    Size = UDim2.fromOffset(10, 10),
-                    BackgroundTransparency = 0,
-                }):Play()
-            else
-                TweenService:Create(Dot,
-                    TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                    Size = UDim2.fromOffset(0, 0),
-                    BackgroundTransparency = 1,
-                }):Play()
-            end
-        end
-
-        function Toggle:OnChanged(Func)
-            Toggle.Changed = Func
-        end
-
-        function Toggle:SetValue(Value)
-            if Toggle.Disabled then return end
-
-            Toggle.Value = Value
-            Toggle:Display()
-
-            for _, Addon in Toggle.Addons do
-                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
-                    Addon.Toggled = Toggle.Value
-                    Addon:Update()
-                end
-            end
-
-            Library:UpdateDependencyBoxes()
-            Library:SafeCallback(Toggle.Callback, Toggle.Value)
-            Library:SafeCallback(Toggle.Changed, Toggle.Value)
-        end
-
-        function Toggle:SetDisabled(Disabled: boolean)
-            Toggle.Disabled = Disabled
-
-            if Toggle.TooltipTable then
-                Toggle.TooltipTable.Disabled = Toggle.Disabled
-            end
-
-            for _, Addon in Toggle.Addons do
-                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
-                    Addon:Update()
-                end
-            end
-
-            Button.Active = not Toggle.Disabled
-            Toggle:Display()
-        end
-
-        function Toggle:SetVisible(Visible: boolean)
-            Toggle.Visible = Visible
-            Button.Visible = Toggle.Visible
-            Groupbox:Resize()
-        end
-
-        function Toggle:SetText(Text: string)
-            Toggle.Text = Text
-            Label.Text = Text
-        end
-
-        Button.MouseButton1Click:Connect(function()
-            if Toggle.Disabled then return end
-            Toggle:SetValue(not Toggle.Value)
-        end)
-
-        if typeof(Toggle.Tooltip) == "string" or typeof(Toggle.DisabledTooltip) == "string" then
-            Toggle.TooltipTable = Library:AddTooltip(Toggle.Tooltip, Toggle.DisabledTooltip, Button)
-            Toggle.TooltipTable.Disabled = Toggle.Disabled
-        end
-
-        if Toggle.Risky then
-            Label.TextColor3 = Library.Scheme.RedColor
-            Library.Registry[Label] = Library.Registry[Label] or {}
-            Library.Registry[Label].TextColor3 = "RedColor"
-        end
-
-        Toggle:Display()
-        Groupbox:Resize()
-
-        Toggle.TextLabel = Label
-        Toggle.Container = Container
-        setmetatable(Toggle, BaseAddons)
-
-        Toggle.Holder = Button
-        table.insert(Groupbox.Elements, Toggle)
-
-        Toggle.Default = Toggle.Value
-        Toggles[Idx] = Toggle
-
-        return Toggle
-    end
         New("UIListLayout", {
             FillDirection = Enum.FillDirection.Horizontal,
             HorizontalAlignment = Enum.HorizontalAlignment.Right,
@@ -6237,65 +6074,12 @@ function Library:CreateWindow(WindowInfo)
                 Parent = MainFrame,
             })
         )
-Library:AddOutline(MainFrame)
-Library:MakeLine(MainFrame, {
-    Position = UDim2.fromOffset(0, 48),
-    Size = UDim2.new(1, 0, 0, 1),
-})
+        Library:AddOutline(MainFrame)
+        Library:MakeLine(MainFrame, {
+            Position = UDim2.fromOffset(0, 48),
+            Size = UDim2.new(1, 0, 0, 1),
+        })
 
-local Blur = Instance.new("BlurEffect")
-Blur.Size = 12
-Blur.Parent = game:GetService("Lighting")
-
-local Glass = Instance.new("Frame")
-Glass.Size = UDim2.new(1, 0, 1, 0)
-Glass.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
-Glass.BackgroundTransparency = 0.25
-Glass.BorderSizePixel = 0
-Glass.ZIndex = 0
-Glass.Parent = MainFrame
-Instance.new("UICorner", Glass).CornerRadius = UDim.new(0, WindowInfo.CornerRadius)
-
-local SnowHolder = Instance.new("Frame")
-SnowHolder.Size = UDim2.new(1, 0, 1, 0)
-SnowHolder.BackgroundTransparency = 1
-SnowHolder.ClipsDescendants = true
-SnowHolder.ZIndex = 1
-SnowHolder.Parent = MainFrame
-Instance.new("UICorner", SnowHolder).CornerRadius = UDim.new(0, WindowInfo.CornerRadius)
-
-local function spawnSnowflake()
-    local flake = Instance.new("Frame")
-    local size = math.random(2, 5)
-    local startX = math.random(0, 100) / 100
-    local duration = math.random(10, 18)
-    local drift = math.random(-3, 3) / 100
-
-    flake.Size = UDim2.fromOffset(size, size)
-    flake.Position = UDim2.new(startX, 0, -0.05, 0)
-    flake.BackgroundColor3 = Color3.fromRGB(220, 220, 255)
-    flake.BackgroundTransparency = math.random(1, 4) / 10
-    flake.BorderSizePixel = 0
-    flake.ZIndex = 2
-    Instance.new("UICorner", flake).CornerRadius = UDim.new(1, 0)
-    flake.Parent = SnowHolder
-
-    local TweenService = game:GetService("TweenService")
-    local tween = TweenService:Create(flake,
-        TweenInfo.new(duration, Enum.EasingStyle.Linear),
-        { Position = UDim2.new(startX + drift, 0, 1.05, 0) }
-    )
-    tween:Play()
-    tween.Completed:Connect(function() flake:Destroy() end)
-end
-
-task.spawn(function()
-    while MainFrame.Parent do
-        spawnSnowflake()
-        task.wait(0.15)
-    end
-end)
-    
         DividerLine = New("Frame", {
             BackgroundColor3 = "OutlineColor",
             Position = UDim2.fromOffset(InitialLeftWidth, 0),
