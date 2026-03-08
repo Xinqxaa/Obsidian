@@ -6081,23 +6081,78 @@ Library:MakeLine(MainFrame, {
     Size = UDim2.new(1, 0, 0, 1),
 })
 
-local Glow = Instance.new("UIStroke")
-Glow.Name = "MainGlow"
-Glow.Thickness = 1.2
-Glow.Color = Color3.fromRGB(170, 120, 255)
-Glow.Transparency = 0.25
-Glow.LineJoinMode = Enum.LineJoinMode.Round
-Glow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-Glow.Parent = MainFrame
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 
-local OuterGlow = Instance.new("UIStroke")
-OuterGlow.Name = "OuterGlow"
-OuterGlow.Thickness = 4
-OuterGlow.Color = Color3.fromRGB(170, 120, 255)
-OuterGlow.Transparency = 0.85
-OuterGlow.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-OuterGlow.LineJoinMode = Enum.LineJoinMode.Round
-OuterGlow.Parent = MainFrame
+-- subtle blur
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 7 -- light blur, not too strong
+Blur.Parent = Lighting
+
+-- particle container attached to MainFrame
+local ParticleHolder = Instance.new("Frame")
+ParticleHolder.Name = "PremiumParticles"
+ParticleHolder.Size = UDim2.new(1,0,1,0)
+ParticleHolder.BackgroundTransparency = 1
+ParticleHolder.ClipsDescendants = true
+ParticleHolder.ZIndex = 0
+ParticleHolder.Parent = MainFrame
+
+-- soft glass tint
+local Glass = Instance.new("Frame")
+Glass.Size = UDim2.new(1,0,1,0)
+Glass.BackgroundColor3 = Color3.fromRGB(20,20,30)
+Glass.BackgroundTransparency = 0.35
+Glass.BorderSizePixel = 0
+Glass.ZIndex = 0
+Glass.Parent = ParticleHolder
+
+-- particle generator
+local function createParticle()
+    local p = Instance.new("Frame")
+
+    local size = math.random(3,6)
+
+    p.Size = UDim2.fromOffset(size,size)
+    p.Position = UDim2.new(math.random(),0,-0.1,0)
+    p.BackgroundColor3 = Color3.fromRGB(210,210,255)
+    p.BackgroundTransparency = 0.4
+    p.BorderSizePixel = 0
+    p.ZIndex = 1
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1,0)
+    corner.Parent = p
+
+    p.Parent = ParticleHolder
+
+    local endPos = UDim2.new(
+        p.Position.X.Scale + math.random(-2,2)/100,
+        0,
+        1.1,
+        0
+    )
+
+    local tween = TweenService:Create(
+        p,
+        TweenInfo.new(math.random(8,14), Enum.EasingStyle.Linear),
+        {Position = endPos}
+    )
+
+    tween:Play()
+
+    tween.Completed:Connect(function()
+        p:Destroy()
+    end)
+end
+
+-- particle loop
+task.spawn(function()
+    while MainFrame.Parent do
+        createParticle()
+        task.wait(0.2)
+    end
+end)
     
         DividerLine = New("Frame", {
             BackgroundColor3 = "OutlineColor",
