@@ -3815,6 +3815,8 @@ local Ring = New("Frame", {
     Parent = Button,
 })
 
+Library.Registry[Ring] = {}
+
 New("UICorner", {
     CornerRadius = UDim.new(1, 0),
     Parent = Ring
@@ -3824,6 +3826,8 @@ local RingStroke = New("UIStroke", {
     Color = "OutlineColor",
     Parent = Ring
 })
+
+Library.Registry[RingStroke] = {}
 
 local Dot = New("Frame", {
     AnchorPoint = Vector2.new(0.5, 0.5),
