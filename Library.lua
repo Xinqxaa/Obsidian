@@ -3753,19 +3753,15 @@ function Funcs:AddToggle(Idx, Info)
         local Toggle = {
             Text = Info.Text,
             Value = Info.Default,
-
             Tooltip = Info.Tooltip,
             DisabledTooltip = Info.DisabledTooltip,
             TooltipTable = nil,
-
             Callback = Info.Callback,
             Changed = Info.Changed,
-
             Risky = Info.Risky,
             Disabled = Info.Disabled,
             Visible = Info.Visible,
             Addons = {},
-
             Type = "Toggle",
         }
 
@@ -3830,26 +3826,23 @@ function Funcs:AddToggle(Idx, Info)
         end
 
         function Toggle:Display()
-            if Library.Unloaded then
-                return
-            end
+            if Library.Unloaded then return end
+
+            Library.Registry[Ring] = Library.Registry[Ring] or {}
+            Library.Registry[RingStroke] = Library.Registry[RingStroke] or {}
+            Library.Registry[Dot] = Library.Registry[Dot] or {}
 
             if Toggle.Disabled then
                 Label.TextTransparency = 0.8
                 RingStroke.Transparency = 0.5
                 Ring.BackgroundColor3 = Library.Scheme.BackgroundColor
-                Library.Registry[Ring] = Library.Registry[Ring] or {}
                 Library.Registry[Ring].BackgroundColor3 = "BackgroundColor"
                 return
             end
 
             Ring.BackgroundColor3 = Library.Scheme.MainColor
-            Library.Registry[Ring] = Library.Registry[Ring] or {}
             Library.Registry[Ring].BackgroundColor3 = "MainColor"
             RingStroke.Transparency = 0
-
-            Library.Registry[RingStroke] = Library.Registry[RingStroke] or {}
-            Library.Registry[Dot] = Library.Registry[Dot] or {}
 
             TweenService:Create(Label, Library.TweenInfo, {
                 TextTransparency = Toggle.Value and 0 or 0.4,
@@ -3882,9 +3875,7 @@ function Funcs:AddToggle(Idx, Info)
         end
 
         function Toggle:SetValue(Value)
-            if Toggle.Disabled then
-                return
-            end
+            if Toggle.Disabled then return end
 
             Toggle.Value = Value
             Toggle:Display()
@@ -3920,7 +3911,6 @@ function Funcs:AddToggle(Idx, Info)
 
         function Toggle:SetVisible(Visible: boolean)
             Toggle.Visible = Visible
-
             Button.Visible = Toggle.Visible
             Groupbox:Resize()
         end
@@ -3931,10 +3921,7 @@ function Funcs:AddToggle(Idx, Info)
         end
 
         Button.MouseButton1Click:Connect(function()
-            if Toggle.Disabled then
-                return
-            end
-
+            if Toggle.Disabled then return end
             Toggle:SetValue(not Toggle.Value)
         end)
 
@@ -3960,12 +3947,10 @@ function Funcs:AddToggle(Idx, Info)
         table.insert(Groupbox.Elements, Toggle)
 
         Toggle.Default = Toggle.Value
-
         Toggles[Idx] = Toggle
 
         return Toggle
     end
-
         New("UIListLayout", {
             FillDirection = Enum.FillDirection.Horizontal,
             HorizontalAlignment = Enum.HorizontalAlignment.Right,
