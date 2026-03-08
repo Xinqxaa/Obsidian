@@ -3753,26 +3753,22 @@ function Funcs:AddToggle(Idx, Info)
     local Toggle = {
         Text = Info.Text,
         Value = Info.Default,
-
         Tooltip = Info.Tooltip,
         DisabledTooltip = Info.DisabledTooltip,
         TooltipTable = nil,
-
         Callback = Info.Callback,
         Changed = Info.Changed,
-
         Risky = Info.Risky,
         Disabled = Info.Disabled,
         Visible = Info.Visible,
         Addons = {},
-
         Type = "Toggle",
     }
 
     local Button = New("TextButton", {
         Active = not Toggle.Disabled,
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 20),
+        Size = UDim2.new(1, 0, 0, 18),
         Text = "",
         Visible = Toggle.Visible,
         Parent = Container,
@@ -3780,7 +3776,7 @@ function Funcs:AddToggle(Idx, Info)
 
     local Label = New("TextLabel", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -46, 1, 0),
+        Size = UDim2.new(1, -26, 1, 0),
         Text = Toggle.Text,
         TextSize = 14,
         TextTransparency = 0.4,
@@ -3795,60 +3791,36 @@ function Funcs:AddToggle(Idx, Info)
         Parent = Label,
     })
 
-    -- Pill track
-    local Switch = New("Frame", {
+    -- Outer circle ring
+    local Ring = New("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
         BackgroundColor3 = "MainColor",
         Position = UDim2.new(1, 0, 0.5, 0),
-        Size = UDim2.fromOffset(36, 20),
+        Size = UDim2.fromOffset(18, 18),
         Parent = Button,
     })
     New("UICorner", {
         CornerRadius = UDim.new(1, 0),
-        Parent = Switch,
+        Parent = Ring,
     })
-    New("UIPadding", {
-        PaddingBottom = UDim.new(0, 3),
-        PaddingLeft = UDim.new(0, 3),
-        PaddingRight = UDim.new(0, 3),
-        PaddingTop = UDim.new(0, 3),
-        Parent = Switch,
-    })
-
-    local SwitchStroke = New("UIStroke", {
+    local RingStroke = New("UIStroke", {
         Color = "OutlineColor",
-        Thickness = 1,
-        Parent = Switch,
+        Thickness = 1.5,
+        Parent = Ring,
     })
 
-    -- Glow behind ball
-    local BallGlow = New("Frame", {
+    -- Inner filled dot
+    local Dot = New("Frame", {
         AnchorPoint = Vector2.new(0.5, 0.5),
         BackgroundColor3 = "AccentColor",
         BackgroundTransparency = 1,
-        Position = UDim2.fromScale(0, 0.5),
-        Size = UDim2.fromOffset(22, 22),
-        SizeConstraint = Enum.SizeConstraint.RelativeYY,
-        ZIndex = 0,
-        Parent = Switch,
+        Position = UDim2.fromScale(0.5, 0.5),
+        Size = UDim2.fromOffset(0, 0),
+        Parent = Ring,
     })
     New("UICorner", {
         CornerRadius = UDim.new(1, 0),
-        Parent = BallGlow,
-    })
-
-    -- Ball
-    local Ball = New("Frame", {
-        AnchorPoint = Vector2.new(0, 0.5),
-        BackgroundColor3 = "FontColor",
-        Position = UDim2.fromScale(0, 0.5),
-        Size = UDim2.fromScale(1, 1),
-        SizeConstraint = Enum.SizeConstraint.RelativeYY,
-        Parent = Switch,
-    })
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Ball,
+        Parent = Dot,
     })
 
     function Toggle:UpdateColors()
@@ -3858,86 +3830,45 @@ function Funcs:AddToggle(Idx, Info)
     function Toggle:Display()
         if Library.Unloaded then return end
 
-        local Offset = Toggle.Value and 1 or 0
-
-        -- Disabled state
         if Toggle.Disabled then
             Label.TextTransparency = 0.8
-            Switch.BackgroundTransparency = 0.5
-            SwitchStroke.Transparency = 0.5
-            Ball.AnchorPoint = Vector2.new(Offset, 0.5)
-            Ball.Position = UDim2.fromScale(Offset, 0.5)
-            Ball.BackgroundColor3 = Library:GetDarkerColor(Library.Scheme.FontColor)
-            Library.Registry[Ball].BackgroundColor3 = function()
-                return Library:GetDarkerColor(Library.Scheme.FontColor)
-            end
-            BallGlow.BackgroundTransparency = 1
+            RingStroke.Transparency = 0.5
+            Ring.BackgroundColor3 = Library.Scheme.BackgroundColor
+            Library.Registry[Ring].BackgroundColor3 = "BackgroundColor"
             return
         end
-
-        Switch.BackgroundTransparency = 0
-        SwitchStroke.Transparency = 0
-
-        -- Smooth track color
-        TweenService:Create(Switch,
-            TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            BackgroundColor3 = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.MainColor,
-        }):Play()
-
-        TweenService:Create(SwitchStroke,
-            TweenInfo.new(0.3, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor,
-        }):Play()
-
-        Switch.BackgroundColor3 = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.MainColor
-        SwitchStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
-
-        Library.Registry[Switch].BackgroundColor3 = Toggle.Value and "AccentColor" or "MainColor"
-        Library.Registry[SwitchStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
 
         -- Label fade
         TweenService:Create(Label, Library.TweenInfo, {
             TextTransparency = Toggle.Value and 0 or 0.4,
         }):Play()
 
-        -- Ball slide with spring
-        TweenService:Create(Ball,
-            TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-            AnchorPoint = Vector2.new(Offset, 0.5),
-            Position = UDim2.fromScale(Offset, 0.5),
+        -- Ring border color
+        TweenService:Create(RingStroke,
+            TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+            Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor,
         }):Play()
+        RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+        Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
 
-        -- Ball squish on click
-        TweenService:Create(Ball,
-            TweenInfo.new(0.08, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(1.35, 0, 0.75, 0),
-        }):Play()
-        task.delay(0.08, function()
-            if Library.Unloaded then return end
-            TweenService:Create(Ball,
-                TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {
-                Size = UDim2.fromScale(1, 1),
-            }):Play()
-        end)
-
-        -- Glow pulse when turned on
         if Toggle.Value then
-            BallGlow.BackgroundTransparency = 0.5
-            TweenService:Create(BallGlow,
-                TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-                BackgroundTransparency = 1,
-                Size = UDim2.fromOffset(28, 28),
+            -- Dot pops in with overshoot
+            TweenService:Create(Dot,
+                TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                Size = UDim2.fromOffset(10, 10),
+                BackgroundTransparency = 0,
             }):Play()
-            task.delay(0.4, function()
-                if Library.Unloaded then return end
-                BallGlow.Size = UDim2.fromOffset(22, 22)
-            end)
         else
-            BallGlow.BackgroundTransparency = 1
+            -- Dot shrinks away
+            TweenService:Create(Dot,
+                TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                Size = UDim2.fromOffset(0, 0),
+                BackgroundTransparency = 1,
+            }):Play()
         end
 
-        Ball.BackgroundColor3 = Library.Scheme.FontColor
-        Library.Registry[Ball].BackgroundColor3 = "FontColor"
+        Ring.BackgroundColor3 = Library.Scheme.MainColor
+        Library.Registry[Ring].BackgroundColor3 = "MainColor"
     end
 
     function Toggle:OnChanged(Func)
@@ -4016,7 +3947,6 @@ function Funcs:AddToggle(Idx, Info)
     table.insert(Groupbox.Elements, Toggle)
 
     Toggle.Default = Toggle.Value
-
     Toggles[Idx] = Toggle
 
     return Toggle
