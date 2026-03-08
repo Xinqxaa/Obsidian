@@ -3741,216 +3741,230 @@ do
     end
 
 function Funcs:AddToggle(Idx, Info)
-    if Library.ForceCheckbox then
-        return Funcs.AddCheckbox(self, Idx, Info)
-    end
-
-    Info = Library:Validate(Info, Templates.Toggle)
-
-    local Groupbox = self
-    local Container = Groupbox.Container
-
-    local Toggle = {
-        Text = Info.Text,
-        Value = Info.Default,
-        Tooltip = Info.Tooltip,
-        DisabledTooltip = Info.DisabledTooltip,
-        TooltipTable = nil,
-        Callback = Info.Callback,
-        Changed = Info.Changed,
-        Risky = Info.Risky,
-        Disabled = Info.Disabled,
-        Visible = Info.Visible,
-        Addons = {},
-        Type = "Toggle",
-    }
-
-    local Button = New("TextButton", {
-        Active = not Toggle.Disabled,
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 18),
-        Text = "",
-        Visible = Toggle.Visible,
-        Parent = Container,
-    })
-
-    local Label = New("TextLabel", {
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, -26, 1, 0),
-        Text = Toggle.Text,
-        TextSize = 14,
-        TextTransparency = 0.4,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Parent = Button,
-    })
-
-    New("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal,
-        HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        Padding = UDim.new(0, 6),
-        Parent = Label,
-    })
-
-    -- Outer circle ring
-    local Ring = New("Frame", {
-        AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundColor3 = "MainColor",
-        Position = UDim2.new(1, 0, 0.5, 0),
-        Size = UDim2.fromOffset(18, 18),
-        Parent = Button,
-    })
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Ring,
-    })
-    local RingStroke = New("UIStroke", {
-        Color = "OutlineColor",
-        Thickness = 1.5,
-        Parent = Ring,
-    })
-
-    -- Inner filled dot
-    local Dot = New("Frame", {
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = "AccentColor",
-        BackgroundTransparency = 1,
-        Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromOffset(0, 0),
-        Parent = Ring,
-    })
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Dot,
-    })
-
-    function Toggle:UpdateColors()
-        Toggle:Display()
-    end
-
-    function Toggle:Display()
-        if Library.Unloaded then return end
-
-        if Toggle.Disabled then
-            Label.TextTransparency = 0.8
-            RingStroke.Transparency = 0.5
-            Ring.BackgroundColor3 = Library.Scheme.BackgroundColor
-            Library.Registry[Ring].BackgroundColor3 = "BackgroundColor"
-            return
+        if Library.ForceCheckbox then
+            return Funcs.AddCheckbox(self, Idx, Info)
         end
 
-        -- Label fade
-        TweenService:Create(Label, Library.TweenInfo, {
-            TextTransparency = Toggle.Value and 0 or 0.4,
-        }):Play()
+        Info = Library:Validate(Info, Templates.Toggle)
 
-        -- Ring border color
-        TweenService:Create(RingStroke,
-            TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor,
-        }):Play()
-        RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
-        Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+        local Groupbox = self
+        local Container = Groupbox.Container
 
-        if Toggle.Value then
-            -- Dot pops in with overshoot
-            TweenService:Create(Dot,
-                TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-                Size = UDim2.fromOffset(10, 10),
-                BackgroundTransparency = 0,
-            }):Play()
-        else
-            -- Dot shrinks away
-            TweenService:Create(Dot,
-                TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-                Size = UDim2.fromOffset(0, 0),
-                BackgroundTransparency = 1,
-            }):Play()
+        local Toggle = {
+            Text = Info.Text,
+            Value = Info.Default,
+
+            Tooltip = Info.Tooltip,
+            DisabledTooltip = Info.DisabledTooltip,
+            TooltipTable = nil,
+
+            Callback = Info.Callback,
+            Changed = Info.Changed,
+
+            Risky = Info.Risky,
+            Disabled = Info.Disabled,
+            Visible = Info.Visible,
+            Addons = {},
+
+            Type = "Toggle",
+        }
+
+        local Button = New("TextButton", {
+            Active = not Toggle.Disabled,
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, 0, 0, 18),
+            Text = "",
+            Visible = Toggle.Visible,
+            Parent = Container,
+        })
+
+        local Label = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Size = UDim2.new(1, -26, 1, 0),
+            Text = Toggle.Text,
+            TextSize = 14,
+            TextTransparency = 0.4,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            Parent = Button,
+        })
+
+        New("UIListLayout", {
+            FillDirection = Enum.FillDirection.Horizontal,
+            HorizontalAlignment = Enum.HorizontalAlignment.Right,
+            Padding = UDim.new(0, 6),
+            Parent = Label,
+        })
+
+        local Ring = New("Frame", {
+            AnchorPoint = Vector2.new(1, 0.5),
+            BackgroundColor3 = "MainColor",
+            Position = UDim2.new(1, 0, 0.5, 0),
+            Size = UDim2.fromOffset(18, 18),
+            Parent = Button,
+        })
+        New("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+            Parent = Ring,
+        })
+        local RingStroke = New("UIStroke", {
+            Color = "OutlineColor",
+            Thickness = 1.5,
+            Parent = Ring,
+        })
+
+        local Dot = New("Frame", {
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = "AccentColor",
+            BackgroundTransparency = 1,
+            Position = UDim2.fromScale(0.5, 0.5),
+            Size = UDim2.fromOffset(0, 0),
+            Parent = Ring,
+        })
+        New("UICorner", {
+            CornerRadius = UDim.new(1, 0),
+            Parent = Dot,
+        })
+
+        function Toggle:UpdateColors()
+            Toggle:Display()
         end
 
-        Ring.BackgroundColor3 = Library.Scheme.MainColor
-        Library.Registry[Ring].BackgroundColor3 = "MainColor"
-    end
+        function Toggle:Display()
+            if Library.Unloaded then
+                return
+            end
 
-    function Toggle:OnChanged(Func)
-        Toggle.Changed = Func
-    end
+            if Toggle.Disabled then
+                Label.TextTransparency = 0.8
+                RingStroke.Transparency = 0.5
+                Ring.BackgroundColor3 = Library.Scheme.BackgroundColor
+                Library.Registry[Ring] = Library.Registry[Ring] or {}
+                Library.Registry[Ring].BackgroundColor3 = "BackgroundColor"
+                return
+            end
 
-    function Toggle:SetValue(Value)
-        if Toggle.Disabled then return end
+            Ring.BackgroundColor3 = Library.Scheme.MainColor
+            Library.Registry[Ring] = Library.Registry[Ring] or {}
+            Library.Registry[Ring].BackgroundColor3 = "MainColor"
+            RingStroke.Transparency = 0
 
-        Toggle.Value = Value
-        Toggle:Display()
+            Library.Registry[RingStroke] = Library.Registry[RingStroke] or {}
+            Library.Registry[Dot] = Library.Registry[Dot] or {}
 
-        for _, Addon in Toggle.Addons do
-            if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
-                Addon.Toggled = Toggle.Value
-                Addon:Update()
+            TweenService:Create(Label, Library.TweenInfo, {
+                TextTransparency = Toggle.Value and 0 or 0.4,
+            }):Play()
+
+            TweenService:Create(RingStroke,
+                TweenInfo.new(0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor,
+            }):Play()
+            RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+            Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
+
+            if Toggle.Value then
+                TweenService:Create(Dot,
+                    TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    Size = UDim2.fromOffset(10, 10),
+                    BackgroundTransparency = 0,
+                }):Play()
+            else
+                TweenService:Create(Dot,
+                    TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                    Size = UDim2.fromOffset(0, 0),
+                    BackgroundTransparency = 1,
+                }):Play()
             end
         end
 
-        Library:UpdateDependencyBoxes()
-        Library:SafeCallback(Toggle.Callback, Toggle.Value)
-        Library:SafeCallback(Toggle.Changed, Toggle.Value)
-    end
+        function Toggle:OnChanged(Func)
+            Toggle.Changed = Func
+        end
 
-    function Toggle:SetDisabled(Disabled: boolean)
-        Toggle.Disabled = Disabled
+        function Toggle:SetValue(Value)
+            if Toggle.Disabled then
+                return
+            end
 
-        if Toggle.TooltipTable then
+            Toggle.Value = Value
+            Toggle:Display()
+
+            for _, Addon in Toggle.Addons do
+                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
+                    Addon.Toggled = Toggle.Value
+                    Addon:Update()
+                end
+            end
+
+            Library:UpdateDependencyBoxes()
+            Library:SafeCallback(Toggle.Callback, Toggle.Value)
+            Library:SafeCallback(Toggle.Changed, Toggle.Value)
+        end
+
+        function Toggle:SetDisabled(Disabled: boolean)
+            Toggle.Disabled = Disabled
+
+            if Toggle.TooltipTable then
+                Toggle.TooltipTable.Disabled = Toggle.Disabled
+            end
+
+            for _, Addon in Toggle.Addons do
+                if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
+                    Addon:Update()
+                end
+            end
+
+            Button.Active = not Toggle.Disabled
+            Toggle:Display()
+        end
+
+        function Toggle:SetVisible(Visible: boolean)
+            Toggle.Visible = Visible
+
+            Button.Visible = Toggle.Visible
+            Groupbox:Resize()
+        end
+
+        function Toggle:SetText(Text: string)
+            Toggle.Text = Text
+            Label.Text = Text
+        end
+
+        Button.MouseButton1Click:Connect(function()
+            if Toggle.Disabled then
+                return
+            end
+
+            Toggle:SetValue(not Toggle.Value)
+        end)
+
+        if typeof(Toggle.Tooltip) == "string" or typeof(Toggle.DisabledTooltip) == "string" then
+            Toggle.TooltipTable = Library:AddTooltip(Toggle.Tooltip, Toggle.DisabledTooltip, Button)
             Toggle.TooltipTable.Disabled = Toggle.Disabled
         end
 
-        for _, Addon in Toggle.Addons do
-            if Addon.Type == "KeyPicker" and Addon.SyncToggleState then
-                Addon:Update()
-            end
+        if Toggle.Risky then
+            Label.TextColor3 = Library.Scheme.RedColor
+            Library.Registry[Label] = Library.Registry[Label] or {}
+            Library.Registry[Label].TextColor3 = "RedColor"
         end
 
-        Button.Active = not Toggle.Disabled
         Toggle:Display()
-    end
-
-    function Toggle:SetVisible(Visible: boolean)
-        Toggle.Visible = Visible
-        Button.Visible = Toggle.Visible
         Groupbox:Resize()
+
+        Toggle.TextLabel = Label
+        Toggle.Container = Container
+        setmetatable(Toggle, BaseAddons)
+
+        Toggle.Holder = Button
+        table.insert(Groupbox.Elements, Toggle)
+
+        Toggle.Default = Toggle.Value
+
+        Toggles[Idx] = Toggle
+
+        return Toggle
     end
-
-    function Toggle:SetText(Text: string)
-        Toggle.Text = Text
-        Label.Text = Text
-    end
-
-    Button.MouseButton1Click:Connect(function()
-        if Toggle.Disabled then return end
-        Toggle:SetValue(not Toggle.Value)
-    end)
-
-    if typeof(Toggle.Tooltip) == "string" or typeof(Toggle.DisabledTooltip) == "string" then
-        Toggle.TooltipTable = Library:AddTooltip(Toggle.Tooltip, Toggle.DisabledTooltip, Button)
-        Toggle.TooltipTable.Disabled = Toggle.Disabled
-    end
-
-    if Toggle.Risky then
-        Label.TextColor3 = Library.Scheme.RedColor
-        Library.Registry[Label].TextColor3 = "RedColor"
-    end
-
-    Toggle:Display()
-    Groupbox:Resize()
-
-    Toggle.TextLabel = Label
-    Toggle.Container = Container
-    setmetatable(Toggle, BaseAddons)
-
-    Toggle.Holder = Button
-    table.insert(Groupbox.Elements, Toggle)
-
-    Toggle.Default = Toggle.Value
-    Toggles[Idx] = Toggle
-
-    return Toggle
-end
 
         New("UIListLayout", {
             FillDirection = Enum.FillDirection.Horizontal,
