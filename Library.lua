@@ -3835,9 +3835,7 @@ function Funcs:AddToggle(Idx, Info)
     end
 
     function Toggle:Display()
-        if Library.Unloaded then
-            return
-        end
+        if Library.Unloaded then return end
 
         if Toggle.Disabled then
             Label.TextTransparency = 0.8
@@ -3861,7 +3859,6 @@ function Funcs:AddToggle(Idx, Info)
             TextTransparency = Toggle.Value and 0 or 0.4,
         }):Play()
 
-        -- Animate the dot
         TweenService:Create(Dot,
             TweenInfo.new(Toggle.Value and 0.22 or 0.15,
             Toggle.Value and Enum.EasingStyle.Back or Enum.EasingStyle.Quad,
@@ -3871,7 +3868,6 @@ function Funcs:AddToggle(Idx, Info)
         }):Play()
     end
 
-    -- ====== Original toggle logic ======
     function Toggle:SetValue(Value)
         if Toggle.Disabled then return end
         Toggle.Value = Value
@@ -3903,9 +3899,10 @@ function Funcs:AddToggle(Idx, Info)
         Label.Text = Text
     end
 
-    -- ====== Add OnChanged support ======
+    -- ====== Add OnChanged support for chaining ======
     function Toggle:OnChanged(Func)
         Toggle.Changed = Func
+        return Toggle -- important for chaining
     end
 
     Button.MouseButton1Click:Connect(function()
