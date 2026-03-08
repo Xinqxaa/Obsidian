@@ -3746,7 +3746,6 @@ do
     end
 
     Info = Library:Validate(Info, Templates.Toggle)
-
     local Groupbox = self
     local Container = Groupbox.Container
 
@@ -3769,6 +3768,7 @@ do
         Type = "Toggle",
     }
 
+    -- ====== Base Button ======
     local Button = New("TextButton", {
         Active = not Toggle.Disabled,
         BackgroundTransparency = 1,
@@ -3778,9 +3778,10 @@ do
         Parent = Container,
     })
 
+    -- ====== Label ======
     local Label = New("TextLabel", {
         BackgroundTransparency = 1,
-        Size = UDim2.new(1, -40, 1, 0),
+        Size = UDim2.new(1, -26, 1, 0),
         Text = Toggle.Text,
         TextSize = 14,
         TextTransparency = 0.4,
@@ -3788,90 +3789,54 @@ do
         Parent = Button,
     })
 
-    New("UIListLayout", {
-        FillDirection = Enum.FillDirection.Horizontal,
-        HorizontalAlignment = Enum.HorizontalAlignment.Right,
-        Padding = UDim.new(0, 6),
-        Parent = Label,
-    })
-
-    -- ====== Circle-style toggle (Ring + Dot) ======
+    -- ====== Circle Toggle (Ring + Dot) ======
     local Ring = New("Frame", {
         AnchorPoint = Vector2.new(1, 0.5),
-        BackgroundColor3 = "MainColor",
+        BackgroundColor3 = Library.Scheme.MainColor,
         Position = UDim2.new(1, 0, 0.5, 0),
         Size = UDim2.fromOffset(18, 18),
         Parent = Button,
     })
-    Library.Registry[Ring] = {}
-
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Ring,
-    })
-
+    New("UICorner", { CornerRadius = UDim.new(1,0), Parent = Ring })
     local RingStroke = New("UIStroke", {
-        Color = "OutlineColor",
+        Color = Library.Scheme.OutlineColor,
         Parent = Ring,
     })
-    Library.Registry[RingStroke] = {}
 
     local Dot = New("Frame", {
         AnchorPoint = Vector2.new(0.5, 0.5),
-        BackgroundColor3 = "AccentColor",
+        BackgroundColor3 = Library.Scheme.AccentColor,
         BackgroundTransparency = 1,
         Position = UDim2.fromScale(0.5, 0.5),
-        Size = UDim2.fromOffset(0, 0),
+        Size = UDim2.fromOffset(0,0),
         Parent = Ring,
     })
-    New("UICorner", {
-        CornerRadius = UDim.new(1, 0),
-        Parent = Dot,
-    })
-    -- ====== End Circle toggle ======
+    New("UICorner", { CornerRadius = UDim.new(1,0), Parent = Dot })
 
-    function Toggle:UpdateColors()
-        Toggle:Display()
-    end
-
+    -- ====== Display logic ======
     function Toggle:Display()
-        if Library.Unloaded then
-            return
-        end
-
-        if Toggle.Disabled then
-            Label.TextTransparency = 0.8
-            Ring.BackgroundTransparency = 0.5
-            RingStroke.Transparency = 0.5
-            Dot.BackgroundTransparency = 1
-            Dot.Size = UDim2.fromOffset(0, 0)
-            return
-        end
-
-        Ring.BackgroundTransparency = 0
-        RingStroke.Transparency = 0
+        if Library.Unloaded then return end
 
         Ring.BackgroundColor3 = Library.Scheme.MainColor
-        Library.Registry[Ring].BackgroundColor3 = "MainColor"
-
         RingStroke.Color = Toggle.Value and Library.Scheme.AccentColor or Library.Scheme.OutlineColor
+        Library.Registry[Ring].BackgroundColor3 = "MainColor"
         Library.Registry[RingStroke].Color = Toggle.Value and "AccentColor" or "OutlineColor"
 
-        TweenService:Create(Label, Library.TweenInfo, {
-            TextTransparency = Toggle.Value and 0 or 0.4,
-        }):Play()
+        Label.TextTransparency = Toggle.Disabled and 0.8 or (Toggle.Value and 0 or 0.4)
+        Ring.BackgroundTransparency = Toggle.Disabled and 0.5 or 0
+        RingStroke.Transparency = Toggle.Disabled and 0.5 or 0
+        Dot.BackgroundTransparency = Toggle.Disabled and 1 or (Toggle.Value and 0 or 1)
 
         -- Animate the dot
-        TweenService:Create(Dot,
-            TweenInfo.new(Toggle.Value and 0.22 or 0.15,
+        TweenService:Create(Dot, TweenInfo.new(Toggle.Value and 0.22 or 0.15, 
             Toggle.Value and Enum.EasingStyle.Back or Enum.EasingStyle.Quad,
-            Toggle.Value and Enum.EasingDirection.Out or Enum.EasingDirection.In), {
-            Size = Toggle.Value and UDim2.fromOffset(10,10) or UDim2.fromOffset(0,0),
-            BackgroundTransparency = Toggle.Value and 0 or 1
+            Toggle.Value and Enum.EasingDirection.Out or Enum.EasingDirection.In
+        ), {
+            Size = Toggle.Value and UDim2.fromOffset(10,10) or UDim2.fromOffset(0,0)
         }):Play()
     end
 
-    -- ====== Keep all other original toggle logic (SetValue, SetDisabled, etc.) ======
+    -- ====== Functions ======
     function Toggle:SetValue(Value)
         if Toggle.Disabled then return end
         Toggle.Value = Value
@@ -3891,10 +3856,8 @@ do
 
     function Toggle:SetDisabled(Disabled)
         Toggle.Disabled = Disabled
-        if Toggle.TooltipTable then
-            Toggle.TooltipTable.Disabled = Toggle.Disabled
-        end
-        Button.Active = not Toggle.Disabled
+        if Toggle.TooltipTable then Toggle.TooltipTable.Disabled = Disabled end
+        Button.Active = not Disabled
         Toggle:Display()
     end
 
@@ -3903,13 +3866,23 @@ do
         Label.Text = Text
     end
 
+    function Toggle:SetVisible(Visible)
+        Toggle.Visible = Visible
+        Button.Visible = Visible
+        Groupbox:Resize()
+    end
+
     Button.MouseButton1Click:Connect(function()
         if not Toggle.Disabled then
             Toggle:SetValue(not Toggle.Value)
         end
     end)
 
-    -- Risky color
+    if typeof(Toggle.Tooltip) == "string" or typeof(Toggle.DisabledTooltip) == "string" then
+        Toggle.TooltipTable = Library:AddTooltip(Toggle.Tooltip, Toggle.DisabledTooltip, Button)
+        Toggle.TooltipTable.Disabled = Toggle.Disabled
+    end
+
     if Toggle.Risky then
         Label.TextColor3 = Library.Scheme.RedColor
         Library.Registry[Label].TextColor3 = "RedColor"
